@@ -2068,25 +2068,32 @@
             },
             
             save: function() {
-                const data = {
-                    thoughts: this.thoughts,
-                    models: this.models,
-                    tags: this.tags,
-                    nextThoughtId: this.nextThoughtId,
-                    nextModelId: this.nextModelId,
-                    currentVersion: this.currentVersion,
-                    lastSaved: new Date().toISOString(),
-                    timeline: this.timeline
-                };
-                
-                try {
-                    localStorage.setItem('structuredThoughtAssistant', JSON.stringify(data));
-                    this.lastSaved = data.lastSaved;
-                    console.log('数据保存成功');
-                    return true;
-                } catch (e) {
-                    console.error('保存数据失败:', e);
-                    return false;
+                if (typeof UnifiedDataManager !== 'undefined') {
+                    // 使用统一数据管理器保存
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: new Date().toISOString(),
+                        nextThoughtId: this.nextThoughtId,
+                        nextModelId: this.nextModelId
+                    };
+                    
+                    const success = UnifiedDataManager.saveData(data);
+                    if (success) {
+                        this.lastSaved = data.lastSaved;
+                        console.log('数据通过统一管理器保存成功');
+                        return true;
+                    } else {
+                        console.log('统一管理器保存失败，使用本地存储');
+                        return this.saveToLocalStorage();
+                    }
+                } else {
+                    // 回退到原来的保存方式
+                    return this.saveToLocalStorage();
                 }
             },
             
