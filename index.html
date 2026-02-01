@@ -1459,6 +1459,23 @@
             resize: vertical;
         }
     </style>
+    <!-- 添加在head部分 -->
+    <script>
+        // 移动端检测和重定向
+        (function() {
+            const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTablet = /iPad|Android|Tablet/i.test(navigator.userAgent);
+            const screenWidth = window.innerWidth;
+            
+            // 如果是移动设备且屏幕宽度小于768px，且不是从移动端页面访问
+            if ((isMobile || screenWidth < 768) && !window.location.href.includes('mobile')) {
+                // 询问用户是否切换到移动端界面
+                if (confirm('检测到您在移动设备上访问，是否切换到移动端优化界面？')) {
+                    window.location.href = 'v16-mobile.html';
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- 顶部状态栏 -->
