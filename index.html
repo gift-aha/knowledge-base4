@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>思维协同处理器 - 智能解析增强版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 添加在v16.html的head部分，大约在第10-20行之间 -->
+    <script src="data-manager.js"></script>
+    <!-- 移动端检测和重定向 -->
+    <script>
+        // 移动端检测和重定向
+        (function() {
+            const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const screenWidth = window.innerWidth;
+            
+            // 如果是移动设备且屏幕宽度小于768px，重定向到移动端
+            if ((isMobile || screenWidth < 768) && 
+                !window.location.href.includes('mobile') && 
+                !window.location.href.includes('v16.html?force=desktop')) {
+                
+                // 询问用户是否切换到移动端
+                if (confirm('检测到您在移动设备上访问，是否切换到移动端优化界面？\n\n选择"取消"继续使用电脑端界面。')) {
+                    window.location.href = 'v16-mobile.html';
+                }
+            }
+        })();
+    </script>
     <style>
         :root {
             --primary-color: #1a237e;
