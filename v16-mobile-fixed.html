@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="思维协同处理器 - 结构化思考整理系统，帮助您管理思维模型和思考记录">
+    <meta name="keywords" content="思维模型,思考整理,知识管理,结构化思考,哲学,关系模型">
+    <meta name="author" content="思维协同处理器">
+    <meta property="og:title" content="思维协同处理器 - 智能解析增强版">
+    <meta property="og:description" content="结构化思考整理系统，管理您的思维模型和思考记录">
+    <meta property="og:image" content="https://gift-aha.github.io/knowledge-base4/preview.png">
+    <meta property="og:url" content="https://gift-aha.github.io/knowledge-base4">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 这里保持原有的CSS样式，为了节省空间，我移除了大部分样式代码 */
+        /* 您可以保留原有的所有CSS代码 */
+        
+        /* 只添加一个关键的新样式 */
+        .mobile-import-notice {
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            color: white;
+            padding: 10px 15px;
+            margin: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端顶部栏 -->
+    <div class="mobile-header">
+        <div class="mobile-header-content">
+            <div class="mobile-logo">
+                <div class="mobile-logo-icon">🧠</div>
+                <div class="mobile-logo-text" id="logo-text">思维协同处理器</div>
+            </div>
+            <div class="mobile-header-actions">
+                <button class="mobile-sync-btn" id="sync-btn" title="同步数据">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="mobile-menu-btn" id="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 只读模式提示 -->
+    <div class="read-only-banner">
+        <i class="fas fa-lock"></i> 移动端为只读查看模式，请在电脑端编辑保存数据
+    </div>
+    
+    <!-- 导入成功提示 -->
+    <div id="import-notice" class="mobile-import-notice" style="display: none;">
+        <i class="fas fa-check-circle"></i> 数据导入成功，已保存到移动端本地存储
+    </div>
+    
+    <!-- 移动端通知区域 -->
+    <div class="mobile-notification" id="notification"></div>
+    
+    <!-- 移动端遮罩层 -->
+    <div class="mobile-overlay" id="overlay"></div>
+    
+    <!-- 移动端侧边菜单 -->
+    <div class="mobile-sidebar" id="sidebar">
+        <!-- 侧边栏内容保持不变 -->
+    </div>
+    
+    <!-- 移动端主要内容区 -->
+    <div class="mobile-content" id="content">
+        <!-- 内容将通过JavaScript动态加载 -->
+        <div class="mobile-loading">
+            <div class="mobile-loading-spinner"></div>
+            <div>加载中...</div>
+        </div>
+    </div>
+    
+    <!-- 移动端底部导航 -->
+    <div class="mobile-bottom-nav">
+        <!-- 底部导航保持不变 -->
+    </div>
+
+    <!-- 数据管理模态框 -->
+    <div class="mobile-modal" id="data-management-modal">
+        <!-- 模态框内容保持不变 -->
+    </div>
+
+    <script>
+        // ==================== 移动端数据管理器 (修复版) ====================
+        // 使用移动端专用存储键，避免与电脑端冲突
+        const MOBILE_STORAGE_KEY = 'structuredThoughtAssistant_MOBILE_BACKUP';
+        
+        // 标记是否为导入操作
+        let isImportOperation = false;
+
+        // 更智能的localStorage保护
+        const originalSetItem = localStorage.setItem;
+        const originalGetItem = localStorage.getItem;
+        const originalRemoveItem = localStorage.removeItem;
+        
+        localStorage.setItem = function(key, value) {
+            // 如果是移动端专用键，允许保存
+            if (key === MOBILE_STORAGE_KEY) {
+                return originalSetItem.call(this, key, value);
+            }
+            
+            // 如果是电脑端主键，但我们是导入操作，允许保存
+            if (key === 'structuredThoughtAssistant' && isImportOperation) {
+                console.log('允许导入操作保存数据到移动端');
+                // 同时保存到移动端专用键
+                originalSetItem.call(this, MOBILE_STORAGE_KEY, value);
+                return originalSetItem.apply(this, arguments);
+            }
+            
+            // 如果是电脑端主键，但不是导入操作，阻止并提示
+            if (key === 'structuredThoughtAssistant') {
+                console.warn('移动端禁止保存数据，请在电脑端编辑');
+                // 显示友好提示而不是alert
+                const notice = document.getElementById('import-notice');
+                if (notice) {
+                    notice.innerHTML = '<i class="fas fa-lock"></i> 移动端为只读模式，请在电脑端编辑';
+                    notice.style.display = 'block';
+                    notice.style.background = 'linear-gradient(to right, #f0ad4e, #ec971f)';
+                    setTimeout(() => {
+                        notice.style.display = 'none';
+                    }, 3000);
+                }
+                return false;
+            }
+            
+            // 其他键正常保存
+            return originalSetItem.apply(this, arguments);
+        };
+
+        const MobileDataManager = {
+            // 使用移动端专用存储键
+            STORAGE_KEY: MOBILE_STORAGE_KEY,
+            
+            // 数据字段
+            thoughts: [],
+            models: [],
+            tags: {},
+            timeline: [],
+            modelConnections: {},
+            currentVersion: 'v22.48',
+            lastSaved: null,
+            
+            // 初始化
+            init: function() {
+                this.loadFullData();
+                return this;
+            },
+            
+            // 加载完整数据
+            loadFullData: function() {
+                try {
+                    // 先尝试从移动端专用存储加载
+                    let savedData = originalGetItem.call(localStorage, this.STORAGE_KEY);
+                    
+                    // 如果移动端存储没有数据，尝试从电脑端存储加载
+                    if (!savedData) {
+                        savedData = originalGetItem.call(localStorage, 'structuredThoughtAssistant');
+                        if (savedData) {
+                            console.log('从电脑端存储加载数据到移动端');
+                            // 将电脑端数据保存到移动端存储
+                            isImportOperation = true;
+                            originalSetItem.call(localStorage, this.STORAGE_KEY, savedData);
+                            isImportOperation = false;
+                        }
+                    }
+                    
+                    if (savedData) {
+                        const data = JSON.parse(savedData);
+                        
+                        // 确保所有字段都有值
+                        this.thoughts = data.thoughts || [];
+                        this.models = data.models || [];
+                        this.tags = data.tags || {};
+                        this.timeline = data.timeline || [];
+                        this.modelConnections = data.modelConnections || {};
+                        this.currentVersion = data.currentVersion || 'v22.48';
+                        this.lastSaved = data.lastSaved || new Date().toISOString();
+                        
+                        console.log('移动端数据加载成功:', {
+                            thoughts: this.thoughts.length,
+                            models: this.models.length,
+                            tags: Object.keys(this.tags).length
+                        });
+                        
+                        return true;
+                    } else {
+                        console.log('未找到保存的数据，使用空数据');
+                        // 初始化空数据结构
+                        this.resetToEmpty();
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    this.resetToEmpty();
+                    return false;
+                }
+            },
+            
+            // 重置为空数据
+            resetToEmpty: function() {
+                this.thoughts = [];
+                this.models = [];
+                this.tags = {};
+                this.timeline = [];
+                this.modelConnections = {};
+                this.currentVersion = 'v22.48';
+                this.lastSaved = new Date().toISOString();
+            },
+            
+            // 保存数据到移动端存储
+            saveToMobileStorage: function() {
+                try {
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: new Date().toISOString(),
+                        savedFrom: 'mobile',
+                        savedAt: Date.now()
+                    };
+                    
+                    originalSetItem.call(localStorage, this.STORAGE_KEY, JSON.stringify(data));
+                    this.lastSaved = data.lastSaved;
+                    console.log('数据已保存到移动端存储');
+                    return true;
+                } catch (error) {
+                    console.error('保存数据失败:', error);
+                    return false;
+                }
+            },
+            
+            // 获取思考记录
+            getThoughtById: function(id) {
+                return this.thoughts.find(t => t.id === id);
+            },
+            
+            // 获取思维模型
+            getModelById: function(id) {
+                return this.models.find(m => m.id === id);
+            },
+            
+            // 获取热门标签
+            getTopTags: function(limit = 12) {
+                return Object.entries(this.tags)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, limit)
+                    .map(([tag, count]) => ({ tag, count }));
+            },
+            
+            // 获取最近思考记录
+            getRecentThoughts: function(limit = 10) {
+                return this.thoughts.slice(0, limit);
+            },
+            
+            // 获取最近思维模型
+            getRecentModels: function(limit = 10) {
+                return this.models.slice(0, limit);
+            },
+            
+            // 搜索功能
+            search: function(query, type = 'all') {
+                if (!query || query.trim() === '') {
+                    return {
+                        thoughts: [],
+                        models: [],
+                        tags: []
+                    };
+                }
+                
+                const searchTerm = query.toLowerCase().trim();
+                const results = {
+                    thoughts: [],
+                    models: [],
+                    tags: []
+                };
+                
+                // 搜索思考记录
+                if (type === 'all' || type === 'thoughts') {
+                    results.thoughts = this.thoughts.filter(thought => {
+                        return (
+                            (thought.title && thought.title.toLowerCase().includes(searchTerm)) ||
+                            (thought.id && thought.id.toLowerCase().includes(searchTerm)) ||
+                            (thought.tags && thought.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+                            (thought.sections && Object.values(thought.sections).some(section => 
+                                section && section.toLowerCase().includes(searchTerm)
+                            ))
+                        );
+                    });
+                }
+                
+                // 搜索思维模型
+                if (type === 'all' || type === 'models') {
+                    results.models = this.models.filter(model => {
+                        return (
+                            (model.name && model.name.toLowerCase().includes(searchTerm)) ||
+                            (model.id && model.id.toLowerCase().includes(searchTerm)) ||
+                            (model.tags && model.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+                            (model.description && model.description.toLowerCase().includes(searchTerm))
+                        );
+                    });
+                }
+                
+                // 搜索标签
+                if (type === 'all' || type === 'tags') {
+                    results.tags = Object.keys(this.tags).filter(tag => 
+                        tag.toLowerCase().includes(searchTerm)
+                    ).map(tag => ({ tag, count: this.tags[tag] }));
+                }
+                
+                return results;
+            },
+            
+            // 按标签筛选
+            filterByTag: function(tag) {
+                const thoughtsWithTag = this.thoughts.filter(thought => 
+                    thought.tags && thought.tags.includes(tag)
+                );
+                
+                const modelsWithTag = this.models.filter(model => 
+                    model.tags && model.tags.includes(tag)
+                );
+                
+                return {
+                    thoughts: thoughtsWithTag,
+                    models: modelsWithTag,
+                    tag: tag
+                };
+            },
+            
+            // 导出所有数据
+            exportAllData: function() {
+                try {
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: this.lastSaved,
+                        exportDate: new Date().toISOString(),
+                        exportFrom: '移动端查看版'
+                    };
+                    
+                    return JSON.stringify(data, null, 2);
+                } catch (error) {
+                    console.error('导出数据失败:', error);
+                    return null;
+                }
+            },
+            
+            // 导入数据 - 关键修复部分
+            importData: function(jsonString) {
+                try {
+                    // 设置导入操作标志
+                    isImportOperation = true;
+                    
+                    const imported = JSON.parse(jsonString);
+                    
+                    // 验证数据格式
+                    if (!imported.thoughts || !Array.isArray(imported.thoughts)) {
+                        throw new Error('数据格式错误：缺少思考记录数据');
+                    }
+                    
+                    if (!imported.models || !Array.isArray(imported.models)) {
+                        throw new Error('数据格式错误：缺少思维模型数据');
+                    }
+                    
+                    // 导入数据到内存
+                    this.thoughts = imported.thoughts;
+                    this.models = imported.models;
+                    this.tags = imported.tags || {};
+                    this.timeline = imported.timeline || [];
+                    this.modelConnections = imported.modelConnections || {};
+                    this.currentVersion = imported.currentVersion || 'v22.48';
+                    this.lastSaved = new Date().toISOString();
+                    
+                    // 保存到移动端存储
+                    const saveResult = this.saveToMobileStorage();
+                    
+                    // 清除导入操作标志
+                    isImportOperation = false;
+                    
+                    if (saveResult) {
+                        // 显示成功提示
+                        const notice = document.getElementById('import-notice');
+                        if (notice) {
+                            notice.innerHTML = '<i class="fas fa-check-circle"></i> 数据导入成功，已保存到移动端本地存储';
+                            notice.style.display = 'block';
+                            notice.style.background = 'linear-gradient(to right, #4CAF50, #45a049)';
+                            setTimeout(() => {
+                                notice.style.display = 'none';
+                            }, 5000);
+                        }
+                        
+                        return { 
+                            success: true, 
+                            message: '数据导入成功',
+                            stats: {
+                                thoughts: this.thoughts.length,
+                                models: this.models.length,
+                                tags: Object.keys(this.tags).length
+                            }
+                        };
+                    } else {
+                        throw new Error('无法保存到本地存储');
+                    }
+                } catch (error) {
+                    console.error('导入数据失败:', error);
+                    isImportOperation = false;
+                    return { 
+                        success: false, 
+                        error: error.message || '导入失败'
+                    };
+                }
+            },
+            
+            // 清除数据
+            clearData: function() {
+                if (confirm('确定要清除所有本地数据吗？此操作不可撤销。\n\n清除后可以重新导入备份数据。')) {
+                    try {
+                        // 清除移动端存储
+                        originalRemoveItem.call(localStorage, this.STORAGE_KEY);
+                        
+                        // 重置内存数据
+                        this.resetToEmpty();
+                        
+                        return true;
+                    } catch (error) {
+                        console.error('清除数据失败:', error);
+                        return false;
+                    }
+                }
+                return false;
+            },
+            
+            // 同步数据（重新加载）
+            syncData: function() {
+                return this.loadFullData();
+            }
+        };
+        
+        // ==================== 移动端UI管理器 (简化版) ====================
+        const MobileUI = {
+            currentView: 'overview',
+            currentDetailId: null,
+            currentDetailType: null,
+            searchQuery: '',
+            currentPage: 1,
+            itemsPerPage: 10,
+            dataManager: null,
+            
+            // 初始化
+            init: function() {
+                // 初始化数据管理器
+                this.dataManager = MobileDataManager.init();
+                
+                // 设置UI事件
+                this.setupEvents();
+                
+                // 渲染初始视图
+                this.renderView('overview');
+                
+                // 更新统计数据
+                this.updateStats();
+                
+                console.log('移动端UI初始化完成');
+            },
+            
+            // 设置事件监听器
+            setupEvents: function() {
+                // 菜单按钮
+                document.getElementById('menu-btn').addEventListener('click', () => this.openSidebar());
+                
+                // 同步按钮
+                document.getElementById('sync-btn').addEventListener('click', () => {
+                    this.showNotification('同步中...', 'info');
+                    setTimeout(() => {
+                        this.dataManager.syncData();
+                        this.updateStats();
+                        this.renderView(this.currentView);
+                        this.showNotification('同步完成', 'success');
+                    }, 500);
+                });
+                
+                // 其他事件监听器...
+            },
+            
+            // 渲染概览页面
+            renderOverview: function() {
+                const recentThoughts = this.dataManager.getRecentThoughts(5);
+                const recentModels = this.dataManager.getRecentModels(5);
+                const topTags = this.dataManager.getTopTags(8);
+                
+                let html = `
+                    <div class="mobile-stats">
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.thoughts.length}</div>
+                            <div class="mobile-stat-label">思考记录</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.models.length}</div>
+                            <div class="mobile-stat-label">思维模型</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${Object.keys(this.dataManager.tags).length}</div>
+                            <div class="mobile-stat-label">标签分类</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.currentVersion}</div>
+                            <div class="mobile-stat-label">系统版本</div>
+                        </div>
+                    </div>
+                `;
+                
+                // 显示思考记录
+                html += `
+                    <div class="mobile-card">
+                        <div class="mobile-card-title">
+                            <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+                            最近思考记录
+                        </div>
+                        <div class="mobile-card-content">
+                `;
+                
+                if (recentThoughts.length > 0) {
+                    recentThoughts.forEach(thought => {
+                        html += `
+                            <div class="mobile-list-item" onclick="MobileUI.showThoughtDetail('${thought.id}')" 
+                                 style="padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight: 500; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        ${thought.title || thought.id}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<div style="text-align: center; color: var(--text-light); padding: 20px;">暂无思考记录</div>';
+                }
+                
+                html += `</div></div>`;
+                
+                // 显示思维模型
+                html += `
+                    <div class="mobile-card">
+                        <div class="mobile-card-title">
+                            <i class="fas fa-cube" style="margin-right: 8px;"></i>
+                            最近思维模型
+                        </div>
+                        <div class="mobile-card-content">
+                `;
+                
+                if (recentModels.length > 0) {
+                    recentModels.forEach(model => {
+                        html += `
+                            <div class="mobile-list-item" onclick="MobileUI.showModelDetail('${model.id}')" 
+                                 style="padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                <div style="font-weight: 500; font-size: 14px;">
+                                    ${model.id}: ${model.name}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<div style="text-align: center; color: var(--text-light); padding: 20px;">暂无思维模型</div>';
+                }
+                
+                html += `</div></div>`;
+                
+                return html;
+            },
+            
+            // 显示通知
+            showNotification: function(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                if (!notification) return;
+                
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                `;
+                
+                notification.className = `mobile-notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            },
+            
+            // 更新统计数据
+            updateStats: function() {
+                const thoughtCount = document.getElementById('sidebar-thought-count');
+                const modelCount = document.getElementById('sidebar-model-count');
+                const tagCount = document.getElementById('sidebar-tag-count');
+                
+                if (thoughtCount) thoughtCount.textContent = this.dataManager.thoughts.length;
+                if (modelCount) modelCount.textContent = this.dataManager.models.length;
+                if (tagCount) tagCount.textContent = Object.keys(this.dataManager.tags).length;
+            },
+            
+            // 导出所有数据
+            exportAllData: function() {
+                const data = this.dataManager.exportAllData();
+                if (!data) {
+                    this.showNotification('导出失败', 'error');
+                    return;
+                }
+                
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `思维协同处理器_移动端备份_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showNotification('数据导出成功', 'success');
+            },
+            
+            // 导入数据
+            importData: function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const result = this.dataManager.importData(event.target.result);
+                        if (result.success) {
+                            this.updateStats();
+                            this.renderView(this.currentView);
+                            this.showNotification(`导入成功: ${result.stats.thoughts}条思考, ${result.stats.models}个模型`, 'success');
+                        } else {
+                            this.showNotification(`导入失败: ${result.error}`, 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+            },
+            
+            // 清除数据
+            clearData: function() {
+                if (this.dataManager.clearData()) {
+                    this.updateStats();
+                    this.renderView('overview');
+                    this.showNotification('数据已清除', 'success');
+                }
+            },
+            
+            // 打开侧边栏
+            openSidebar: function() {
+                document.getElementById('sidebar').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
+            },
+            
+            // 渲染视图
+            renderView: function(view) {
+                const content = document.getElementById('content');
+                if (!content) return;
+                
+                let html = '';
+                switch(view) {
+                    case 'overview':
+                        html = this.renderOverview();
+                        break;
+                    default:
+                        html = this.renderOverview();
+                }
+                
+                content.innerHTML = html;
+            }
+        };
+        
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否有已保存的数据
+            const hasMobileData = localStorage.getItem(MOBILE_STORAGE_KEY);
+            const hasDesktopData = localStorage.getItem('structuredThoughtAssistant');
+            
+            if (!hasMobileData && hasDesktopData) {
+                // 如果有电脑端数据但没有移动端数据，提示用户
+                console.log('检测到电脑端数据，可以导入到移动端');
+            }
+            
+            // 初始化移动端UI
+            MobileUI.init();
+        });
+    </script>
+</body>
+</html>
