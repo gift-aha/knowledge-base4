@@ -836,26 +836,7 @@
         
         .mobile-notification.error {
             border-left: 4px solid var(--danger-color);
-        }
-        
-        /* 只读模式提示 */
-        .read-only-banner {
-            position: fixed;
-            top: 60px;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to right, #f0ad4e, #ec971f);
-            color: white;
-            padding: 8px 15px;
-            font-size: 13px;
-            z-index: 999;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .read-only-banner i {
-            margin-right: 8px;
-        }
+        }        
     </style>
 </head>
 <body>
@@ -876,12 +857,7 @@
             </div>
         </div>
     </div>
-    
-    <!-- 只读模式提示 -->
-    <div class="read-only-banner">
-        <i class="fas fa-lock"></i> 移动端为只读查看模式，请在电脑端编辑保存数据
-    </div>
-    
+
     <!-- 移动端通知区域 -->
     <div class="mobile-notification" id="notification"></div>
     
@@ -1050,39 +1026,6 @@
     </div>
 
     <script>
-        // ==================== 移动端数据保护 - 只读模式 ====================
-        console.log('移动端进入只读模式，数据将在电脑端保存');
-
-        // 重写 localStorage.setItem 防止移动端保存
-        const originalSetItem = localStorage.setItem;
-        localStorage.setItem = function(key, value) {
-            if (key === 'structuredThoughtAssistant') {
-                console.warn('移动端禁止保存数据，请在电脑端编辑');
-                alert('移动端为查看模式，请在电脑端编辑保存数据');
-                return false; // 阻止保存
-            }
-            return originalSetItem.apply(this, arguments);
-        };
-
-        // 禁用所有保存按钮
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                const buttons = document.querySelectorAll('button');
-                buttons.forEach(btn => {
-                    if (btn.textContent.includes('保存') || btn.textContent.includes('Save')) {
-                        btn.disabled = true;
-                        btn.innerHTML = '<i class="fas fa-lock"></i> 电脑端编辑';
-                        btn.style.opacity = '0.6';
-                        btn.onclick = function(e) {
-                            e.preventDefault();
-                            alert('请在电脑浏览器中编辑保存数据');
-                            return false;
-                        };
-                    }
-                });
-            }, 1000);
-        });
-
         // ==================== 移动端数据管理器 ====================
         const MobileDataManager = {
             STORAGE_KEY: 'structuredThoughtAssistant',
