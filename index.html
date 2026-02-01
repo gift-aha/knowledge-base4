@@ -5541,6 +5541,23 @@
                 UIManager.closeTimelineEditModal();
             }
         });
+        // 移动端同步标记
+        setTimeout(() => {
+            // 监听所有保存操作
+            const originalSave = DataStore.save;
+            DataStore.save = function() {
+                const result = originalSave.call(this);
+                if (result) {
+                    // 设置同步标记
+                    localStorage.setItem('last_data_update', Date.now().toString());
+                    console.log('✅ 数据已保存，移动端同步标记已设置');
+                }
+                return result;
+            };
+            
+            // 初始设置一次标记
+            localStorage.setItem('last_data_update', Date.now().toString());
+        }, 1000);
     </script>
 </body>
 </html>
