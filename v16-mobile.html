@@ -10,9 +10,15 @@
             --primary-color: #1a237e;
             --secondary-color: #283593;
             --accent-color: #5c6bc0;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
             --light-bg: #f8f9fa;
+            --dark-bg: #1a237e;
+            --border-color: #e1e5eb;
             --text-color: #333;
             --text-light: #666;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         
         * {
@@ -20,6 +26,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -27,6 +34,7 @@
             color: var(--text-color);
             min-height: 100vh;
             overflow-x: hidden;
+            padding-bottom: 60px; /* 给底部导航留空间 */
         }
         
         /* 移动端顶部栏 */
@@ -38,11 +46,19 @@
             background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
             color: white;
             padding: 15px;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 60px;
+        }
+        
+        .mobile-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
         
         .mobile-logo {
@@ -51,28 +67,61 @@
             gap: 10px;
         }
         
+        .mobile-logo-icon {
+            font-size: 22px;
+        }
+        
         .mobile-logo-text {
             font-size: 18px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
         }
         
-        .mobile-menu-btn {
-            background: none;
+        .mobile-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .mobile-sync-btn {
+            background: rgba(255, 255, 255, 0.15);
             border: none;
             color: white;
-            font-size: 20px;
-            cursor: pointer;
             width: 40px;
             height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .mobile-sync-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .mobile-menu-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
         }
         
         .mobile-menu-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.25);
         }
         
         /* 移动端侧边菜单 */
@@ -83,10 +132,12 @@
             bottom: 0;
             width: 280px;
             background: white;
-            z-index: 200;
+            z-index: 1001;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: left 0.3s ease;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         .mobile-sidebar.active {
@@ -102,17 +153,39 @@
             align-items: center;
         }
         
+        .mobile-sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
         .mobile-sidebar-close {
             background: none;
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        
+        .mobile-sidebar-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mobile-sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
         }
         
         .mobile-nav-section {
             padding: 20px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .mobile-nav-section h3 {
@@ -129,7 +202,7 @@
         }
         
         .mobile-nav-links li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .mobile-nav-links a {
@@ -143,6 +216,7 @@
             font-size: 15px;
         }
         
+        .mobile-nav-links a:hover,
         .mobile-nav-links a.active {
             background-color: #e8edff;
             color: var(--primary-color);
@@ -163,19 +237,22 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 150;
-            display: none;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
         }
         
         .mobile-overlay.active {
-            display: block;
+            opacity: 1;
+            visibility: visible;
         }
         
         /* 主要内容区 */
         .mobile-content {
-            margin-top: 70px;
+            margin-top: 60px;
             padding: 15px;
-            min-height: calc(100vh - 70px);
+            min-height: calc(100vh - 120px);
         }
         
         /* 移动端卡片样式 */
@@ -184,8 +261,14 @@
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
             border-left: 4px solid var(--primary-color);
+        }
+        
+        .mobile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
         
         .mobile-card-title {
@@ -195,10 +278,17 @@
             color: var(--primary-color);
         }
         
+        .mobile-card-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 12px;
+        }
+        
         .mobile-card-content {
             font-size: 14px;
             color: var(--text-color);
             line-height: 1.5;
+            margin-bottom: 15px;
         }
         
         .mobile-card-meta {
@@ -218,10 +308,18 @@
         .mobile-search input {
             width: 100%;
             padding: 12px 15px 12px 45px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 25px;
             font-size: 14px;
             background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        
+        .mobile-search input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 2px 10px rgba(92, 107, 192, 0.2);
         }
         
         .mobile-search i {
@@ -229,7 +327,8 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
+            color: var(--text-light);
+            font-size: 16px;
         }
         
         /* 移动端标签 */
@@ -246,22 +345,38 @@
             color: var(--accent-color);
             border-radius: 15px;
             font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .mobile-tag:hover {
+            background-color: rgba(92, 107, 192, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .mobile-tag.clickable {
+            cursor: pointer;
         }
         
         /* 移动端按钮 */
         .mobile-btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
             border-radius: 8px;
             font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s;
+        }
+        
+        .mobile-btn:active {
+            transform: translateY(1px);
         }
         
         .mobile-btn-primary {
@@ -269,10 +384,27 @@
             color: white;
         }
         
+        .mobile-btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+        
         .mobile-btn-secondary {
             background-color: var(--light-bg);
             color: var(--text-color);
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
+        }
+        
+        .mobile-btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+        
+        .mobile-btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .mobile-btn-success:hover {
+            background-color: #43a047;
         }
         
         /* 移动端详情页 */
@@ -281,39 +413,50 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
         }
         
         .mobile-detail-header {
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .mobile-detail-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 5px;
+            line-height: 1.3;
+        }
+        
+        .mobile-detail-subtitle {
+            font-size: 16px;
+            color: var(--text-light);
+            margin-bottom: 10px;
         }
         
         .mobile-detail-id {
             font-size: 14px;
             color: var(--text-light);
-            background-color: #f5f5f5;
-            padding: 4px 8px;
+            background-color: #f0f4f9;
+            padding: 4px 10px;
             border-radius: 4px;
             display: inline-block;
+            margin-bottom: 10px;
+            font-family: monospace;
         }
         
         .mobile-detail-section {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .mobile-detail-section:last-child {
             border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
         
         .mobile-detail-section h4 {
@@ -331,17 +474,71 @@
             color: var(--text-color);
         }
         
+        /* 可点击链接样式 */
+        .clickable-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 2px 4px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        
+        .clickable-link:hover {
+            color: var(--primary-color);
+            background-color: rgba(92, 107, 192, 0.1);
+        }
+        
+        .model-id-link {
+            font-family: monospace;
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .model-id-link:hover {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #e68900;
+        }
+        
+        .thought-id-link {
+            font-family: monospace;
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .thought-id-link:hover {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #43a047;
+        }
+        
         /* 移动端空状态 */
         .mobile-empty {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: var(--text-light);
         }
         
         .mobile-empty i {
             font-size: 48px;
             margin-bottom: 15px;
             color: #ddd;
+        }
+        
+        .mobile-empty p {
+            font-size: 16px;
+            margin-bottom: 20px;
         }
         
         /* 移动端底部导航 */
@@ -355,7 +552,8 @@
             justify-content: space-around;
             padding: 10px 0;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 100;
+            z-index: 1000;
+            border-top: 1px solid var(--border-color);
         }
         
         .mobile-nav-item {
@@ -366,14 +564,53 @@
             color: var(--text-light);
             text-decoration: none;
             font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
         
+        .mobile-nav-item:hover,
         .mobile-nav-item.active {
             color: var(--primary-color);
+            background-color: rgba(26, 35, 126, 0.05);
         }
         
         .mobile-nav-item i {
             font-size: 20px;
+        }
+        
+        /* 移动端加载动画 */
+        .mobile-loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            gap: 15px;
+        }
+        
+        .mobile-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(26, 35, 126, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 同步动画 */
+        .sync-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
         
         /* 移动端响应式调整 */
@@ -389,40 +626,221 @@
             .mobile-detail {
                 padding: 15px;
             }
+            
+            .mobile-logo-text {
+                max-width: 120px;
+            }
         }
         
-        /* 移动端加载动画 */
-        .mobile-loading {
+        @media (max-width: 360px) {
+            .mobile-logo-text {
+                max-width: 100px;
+                font-size: 16px;
+            }
+            
+            .mobile-nav-item {
+                padding: 6px 8px;
+            }
+            
+            .mobile-nav-item i {
+                font-size: 18px;
+            }
+        }
+        
+        /* 移动端统计卡片 */
+        .mobile-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mobile-stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .mobile-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .mobile-stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        /* 移动端分页 */
+        .mobile-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+        }
+        
+        .mobile-page-btn {
+            padding: 8px 15px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .mobile-page-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .mobile-page-btn:hover:not(.active) {
+            background-color: var(--light-bg);
+        }
+        
+        /* 移动端关联网络 */
+        .mobile-network {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .mobile-network-node {
+            padding: 8px 12px;
+            background-color: rgba(92, 107, 192, 0.1);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(92, 107, 192, 0.2);
+        }
+        
+        .mobile-network-node:hover {
+            background-color: rgba(92, 107, 192, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .mobile-network-node.center {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* 移动端模态框 */
+        .mobile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 200px;
+            z-index: 1002;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
         }
         
-        .mobile-loading-spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(26, 35, 126, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
+        .mobile-modal.active {
+            opacity: 1;
+            visibility: visible;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .mobile-modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .mobile-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .mobile-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* 移动端通知 */
+        .mobile-notification {
+            position: fixed;
+            top: 70px;
+            right: 15px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 300px;
+        }
+        
+        .mobile-notification.show {
+            transform: translateX(0);
+        }
+        
+        .mobile-notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .mobile-notification.info {
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .mobile-notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .mobile-notification.error {
+            border-left: 4px solid var(--danger-color);
         }
     </style>
 </head>
 <body>
     <!-- 移动端顶部栏 -->
     <div class="mobile-header">
-        <div class="mobile-logo">
-            <div class="mobile-logo-text">思维协同处理器</div>
+        <div class="mobile-header-content">
+            <div class="mobile-logo">
+                <div class="mobile-logo-icon">🧠</div>
+                <div class="mobile-logo-text" id="logo-text">思维协同处理器</div>
+            </div>
+            <div class="mobile-header-actions">
+                <button class="mobile-sync-btn" id="sync-btn" title="同步数据">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="mobile-menu-btn" id="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
-        <button class="mobile-menu-btn" id="menu-btn">
-            <i class="fas fa-bars"></i>
-        </button>
     </div>
+    
+    <!-- 移动端通知区域 -->
+    <div class="mobile-notification" id="notification"></div>
     
     <!-- 移动端遮罩层 -->
     <div class="mobile-overlay" id="overlay"></div>
@@ -430,35 +848,73 @@
     <!-- 移动端侧边菜单 -->
     <div class="mobile-sidebar" id="sidebar">
         <div class="mobile-sidebar-header">
-            <div>导航菜单</div>
+            <div class="mobile-sidebar-title">导航菜单</div>
             <button class="mobile-sidebar-close" id="close-sidebar">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         
-        <div class="mobile-nav-section">
-            <h3><i class="fas fa-compass"></i> 核心功能</h3>
-            <ul class="mobile-nav-links">
-                <li><a href="#" class="active" data-view="overview"><i class="fas fa-home"></i> 首页概览</a></li>
-                <li><a href="#" data-view="thoughts"><i class="fas fa-list-ul"></i> 思考记录</a></li>
-                <li><a href="#" data-view="models"><i class="fas fa-cube"></i> 思维模型</a></li>
-                <li><a href="#" data-view="search"><i class="fas fa-search"></i> 搜索</a></li>
-            </ul>
-        </div>
-        
-        <div class="mobile-nav-section">
-            <h3><i class="fas fa-tags"></i> 常用标签</h3>
-            <div class="mobile-tags" id="common-tags">
-                <!-- 常用标签将通过JS动态生成 -->
+        <div class="mobile-sidebar-content">
+            <div class="mobile-nav-section">
+                <h3><i class="fas fa-compass"></i> 核心功能</h3>
+                <ul class="mobile-nav-links">
+                    <li><a href="#" class="active" data-view="overview"><i class="fas fa-home"></i> 首页概览</a></li>
+                    <li><a href="#" data-view="thoughts"><i class="fas fa-list-ul"></i> 思考记录</a></li>
+                    <li><a href="#" data-view="models"><i class="fas fa-cube"></i> 思维模型</a></li>
+                    <li><a href="#" data-view="search"><i class="fas fa-search"></i> 搜索</a></li>
+                    <li><a href="#" data-view="tags"><i class="fas fa-tags"></i> 标签分类</a></li>
+                </ul>
             </div>
-        </div>
-        
-        <div class="mobile-nav-section">
-            <h3><i class="fas fa-info-circle"></i> 系统信息</h3>
-            <div class="mobile-card-content">
-                <div>思考记录: <span id="mobile-thought-count">0</span></div>
-                <div>思维模型: <span id="mobile-model-count">0</span></div>
-                <div>当前版本: <span id="mobile-version">v22.48</span></div>
+            
+            <div class="mobile-nav-section">
+                <h3><i class="fas fa-chart-line"></i> 系统概览</h3>
+                <div class="mobile-stats">
+                    <div class="mobile-stat-card">
+                        <div class="mobile-stat-value" id="sidebar-thought-count">0</div>
+                        <div class="mobile-stat-label">思考记录</div>
+                    </div>
+                    <div class="mobile-stat-card">
+                        <div class="mobile-stat-value" id="sidebar-model-count">0</div>
+                        <div class="mobile-stat-label">思维模型</div>
+                    </div>
+                    <div class="mobile-stat-card">
+                        <div class="mobile-stat-value" id="sidebar-tag-count">0</div>
+                        <div class="mobile-stat-label">标签分类</div>
+                    </div>
+                    <div class="mobile-stat-card">
+                        <div class="mobile-stat-value" id="sidebar-version">v22.48</div>
+                        <div class="mobile-stat-label">系统版本</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mobile-nav-section">
+                <h3><i class="fas fa-fire"></i> 热门标签</h3>
+                <div class="mobile-tags" id="common-tags">
+                    <!-- 常用标签将通过JS动态生成 -->
+                    <div class="mobile-loading">
+                        <div class="mobile-loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mobile-nav-section">
+                <h3><i class="fas fa-info-circle"></i> 数据状态</h3>
+                <div style="font-size: 14px; line-height: 1.6;">
+                    <div style="margin-bottom: 8px;">
+                        <span style="color: var(--text-light);">最后同步:</span>
+                        <span id="last-sync-time" style="font-weight: 500;">刚刚</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="color: var(--text-light);">数据状态:</span>
+                        <span id="data-status" style="color: var(--success-color); font-weight: 500;">正常</span>
+                    </div>
+                    <div>
+                        <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.showDataManagement()" style="margin-top: 10px;">
+                            <i class="fas fa-database"></i> 数据管理
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -468,6 +924,7 @@
         <!-- 内容将通过JavaScript动态加载 -->
         <div class="mobile-loading">
             <div class="mobile-loading-spinner"></div>
+            <div>加载中...</div>
         </div>
     </div>
     
@@ -489,339 +946,974 @@
             <i class="fas fa-search"></i>
             <span>搜索</span>
         </a>
-        <a href="#" class="mobile-nav-item" onclick="syncWithPC()">
-            <i class="fas fa-sync-alt"></i>
-            <span>同步</span>
+        <a href="#" class="mobile-nav-item" onclick="MobileUI.openSidebar()">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>更多</span>
         </a>
+    </div>
+
+    <!-- 数据管理模态框 -->
+    <div class="mobile-modal" id="data-management-modal">
+        <div class="mobile-modal-content">
+            <div class="mobile-modal-title">
+                <i class="fas fa-database"></i> 数据管理
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <p style="font-size: 14px; color: var(--text-light); margin-bottom: 15px;">
+                    所有数据保存在浏览器本地存储中，与电脑端自动同步。
+                </p>
+                
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: var(--primary-color);">当前数据状态</div>
+                    <div style="font-size: 14px; line-height: 1.6;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>思考记录:</span>
+                            <span id="modal-thought-count" style="font-weight: 500;">0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>思维模型:</span>
+                            <span id="modal-model-count" style="font-weight: 500;">0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>最后保存:</span>
+                            <span id="modal-last-saved" style="font-weight: 500;">未知</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mobile-btn-group" style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.exportAllData()">
+                        <i class="fas fa-file-export"></i> 导出全部数据
+                    </button>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.importData()">
+                        <i class="fas fa-file-import"></i> 导入数据
+                    </button>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.clearData()">
+                        <i class="fas fa-trash-alt"></i> 清除本地数据
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mobile-modal-actions">
+                <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.closeModal()" style="flex: 1;">
+                    取消
+                </button>
+                <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.syncData()" style="flex: 1;">
+                    <i class="fas fa-sync-alt"></i> 同步
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
         // ==================== 移动端数据管理器 ====================
         const MobileDataManager = {
+            STORAGE_KEY: 'structuredThoughtAssistant',
+            BACKUP_PREFIX: 'structuredThoughtAssistant_backup_',
+            
+            // 数据字段
             thoughts: [],
             models: [],
             tags: {},
-            currentView: 'overview',
+            timeline: [],
+            modelConnections: {},
+            currentVersion: 'v22.48',
+            lastSaved: null,
+            nextThoughtId: 124,
+            nextModelId: 81,
             
+            // 初始化
             init: function() {
-                this.loadData();
-                this.setupNavigation();
-                this.renderCurrentView();
-                
-                // 更新系统信息
-                this.updateStats();
+                this.loadFullData();
+                this.setupStorageListener();
+                return this;
             },
             
-            loadData: function() {
-                // 从本地存储加载数据
-                const saved = localStorage.getItem('structuredThoughtAssistant');
-                if (saved) {
-                    try {
+            // 加载完整数据（与电脑端完全一致）
+            loadFullData: function() {
+                try {
+                    const saved = localStorage.getItem(this.STORAGE_KEY);
+                    if (saved) {
                         const data = JSON.parse(saved);
+                        
+                        // 确保所有字段都有值（与电脑端一致）
                         this.thoughts = data.thoughts || [];
                         this.models = data.models || [];
                         this.tags = data.tags || {};
-                        console.log('移动端数据加载成功');
-                    } catch (e) {
-                        console.log('移动端数据加载失败，使用空数据', e);
+                        this.timeline = data.timeline || [];
+                        this.modelConnections = data.modelConnections || {};
+                        this.currentVersion = data.currentVersion || 'v22.48';
+                        this.lastSaved = data.lastSaved || null;
+                        this.nextThoughtId = data.nextThoughtId || 124;
+                        this.nextModelId = data.nextModelId || 81;
+                        
+                        console.log('移动端完整数据加载成功');
+                        this.showNotification('数据加载成功', 'success');
+                        return true;
+                    } else {
+                        console.log('未找到保存的数据，使用空数据');
+                        this.showNotification('首次使用，数据已初始化', 'info');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    this.showNotification('数据加载失败，尝试修复...', 'error');
+                    
+                    // 尝试修复数据
+                    if (this.repairData()) {
+                        this.showNotification('数据修复成功', 'success');
+                        return true;
+                    } else {
+                        this.showNotification('数据修复失败，使用空数据', 'error');
+                        return false;
                     }
                 }
-                
-                // 更新常用标签
-                this.updateCommonTags();
             },
             
-            updateStats: function() {
-                document.getElementById('mobile-thought-count').textContent = this.thoughts.length;
-                document.getElementById('mobile-model-count').textContent = this.models.length;
-                document.getElementById('mobile-version').textContent = this.getCurrentVersion();
-            },
-            
-            getCurrentVersion: function() {
-                const saved = localStorage.getItem('structuredThoughtAssistant');
-                if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        return data.currentVersion || 'v22.48';
-                    } catch (e) {
-                        return 'v22.48';
-                    }
-                }
-                return 'v22.48';
-            },
-            
-            updateCommonTags: function() {
-                const commonTags = this.getTopTags(8);
-                const container = document.getElementById('common-tags');
-                
-                if (commonTags.length > 0) {
-                    let html = '';
-                    commonTags.forEach(({ tag, count }) => {
-                        html += `<span class="mobile-tag" onclick="MobileUI.filterByTag('${tag}')">${tag} (${count})</span>`;
-                    });
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<span style="color: #999; font-size: 14px;">暂无标签</span>';
+            // 保存完整数据（与电脑端完全一致）
+            saveFullData: function() {
+                try {
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: new Date().toISOString(),
+                        nextThoughtId: this.nextThoughtId,
+                        nextModelId: this.nextModelId
+                    };
+                    
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+                    
+                    // 触发自定义事件，通知其他页面
+                    window.dispatchEvent(new CustomEvent('data-saved', {
+                        detail: { timestamp: Date.now() }
+                    }));
+                    
+                    console.log('数据保存成功');
+                    return true;
+                } catch (error) {
+                    console.error('保存数据失败:', error);
+                    this.showNotification('数据保存失败', 'error');
+                    return false;
                 }
             },
             
-            getTopTags: function(limit = 8) {
+            // 获取思考记录
+            getThoughtById: function(id) {
+                return this.thoughts.find(t => t.id === id);
+            },
+            
+            // 获取思维模型
+            getModelById: function(id) {
+                return this.models.find(m => m.id === id);
+            },
+            
+            // 获取热门标签
+            getTopTags: function(limit = 12) {
                 return Object.entries(this.tags)
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, limit)
                     .map(([tag, count]) => ({ tag, count }));
             },
             
-            getThoughtById: function(id) {
-                return this.thoughts.find(t => t.id === id);
-            },
-            
-            getModelById: function(id) {
-                return this.models.find(m => m.id === id);
-            },
-            
+            // 获取最近思考记录
             getRecentThoughts: function(limit = 10) {
                 return this.thoughts.slice(0, limit);
             },
             
+            // 获取最近思维模型
             getRecentModels: function(limit = 10) {
                 return this.models.slice(0, limit);
             },
             
-            search: function(query) {
-                if (!query.trim()) return { thoughts: [], models: [] };
+            // 搜索功能
+            search: function(query, type = 'all') {
+                if (!query || query.trim() === '') {
+                    return {
+                        thoughts: [],
+                        models: [],
+                        tags: []
+                    };
+                }
                 
-                const searchTerm = query.toLowerCase();
+                const searchTerm = query.toLowerCase().trim();
                 const results = {
                     thoughts: [],
-                    models: []
+                    models: [],
+                    tags: []
                 };
                 
                 // 搜索思考记录
-                results.thoughts = this.thoughts.filter(thought => {
-                    return (
-                        (thought.title && thought.title.toLowerCase().includes(searchTerm)) ||
-                        (thought.id && thought.id.toLowerCase().includes(searchTerm)) ||
-                        (thought.tags && thought.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
-                        (thought.sections && Object.values(thought.sections).some(section => 
-                            section.toLowerCase().includes(searchTerm)
-                        ))
-                    );
-                });
+                if (type === 'all' || type === 'thoughts') {
+                    results.thoughts = this.thoughts.filter(thought => {
+                        return (
+                            (thought.title && thought.title.toLowerCase().includes(searchTerm)) ||
+                            (thought.id && thought.id.toLowerCase().includes(searchTerm)) ||
+                            (thought.tags && thought.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+                            (thought.sections && Object.values(thought.sections).some(section => 
+                                section && section.toLowerCase().includes(searchTerm)
+                            ))
+                        );
+                    });
+                }
                 
                 // 搜索思维模型
-                results.models = this.models.filter(model => {
-                    return (
-                        (model.name && model.name.toLowerCase().includes(searchTerm)) ||
-                        (model.id && model.id.toLowerCase().includes(searchTerm)) ||
-                        (model.tags && model.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
-                        (model.description && model.description.toLowerCase().includes(searchTerm))
-                    );
-                });
+                if (type === 'all' || type === 'models') {
+                    results.models = this.models.filter(model => {
+                        return (
+                            (model.name && model.name.toLowerCase().includes(searchTerm)) ||
+                            (model.id && model.id.toLowerCase().includes(searchTerm)) ||
+                            (model.tags && model.tags.some(tag => tag.toLowerCase().includes(searchTerm))) ||
+                            (model.description && model.description.toLowerCase().includes(searchTerm))
+                        );
+                    });
+                }
+                
+                // 搜索标签
+                if (type === 'all' || type === 'tags') {
+                    results.tags = Object.keys(this.tags).filter(tag => 
+                        tag.toLowerCase().includes(searchTerm)
+                    ).map(tag => ({ tag, count: this.tags[tag] }));
+                }
                 
                 return results;
             },
             
-            setupNavigation: function() {
-                // 设置菜单按钮点击事件
-                document.getElementById('menu-btn').addEventListener('click', () => {
-                    document.getElementById('sidebar').classList.add('active');
-                    document.getElementById('overlay').classList.add('active');
-                });
+            // 按标签筛选
+            filterByTag: function(tag) {
+                const thoughtsWithTag = this.thoughts.filter(thought => 
+                    thought.tags && thought.tags.includes(tag)
+                );
                 
-                // 设置关闭菜单按钮事件
-                document.getElementById('close-sidebar').addEventListener('click', () => {
-                    this.closeSidebar();
-                });
+                const modelsWithTag = this.models.filter(model => 
+                    model.tags && model.tags.includes(tag)
+                );
                 
-                // 设置遮罩层点击事件
-                document.getElementById('overlay').addEventListener('click', () => {
-                    this.closeSidebar();
-                });
-                
-                // 设置导航链接点击事件
-                document.querySelectorAll('.mobile-nav-links a, .mobile-nav-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        
-                        const view = item.getAttribute('data-view');
-                        if (view) {
-                            this.currentView = view;
-                            this.renderCurrentView();
-                            this.closeSidebar();
-                            
-                            // 更新底部导航激活状态
-                            document.querySelectorAll('.mobile-nav-item').forEach(nav => {
-                                nav.classList.remove('active');
-                            });
-                            item.classList.add('active');
+                return {
+                    thoughts: thoughtsWithTag,
+                    models: modelsWithTag,
+                    tag: tag
+                };
+            },
+            
+            // 导出所有数据
+            exportAllData: function() {
+                try {
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: this.lastSaved,
+                        nextThoughtId: this.nextThoughtId,
+                        nextModelId: this.nextModelId,
+                        exportDate: new Date().toISOString(),
+                        exportFrom: '移动端'
+                    };
+                    
+                    return JSON.stringify(data, null, 2);
+                } catch (error) {
+                    console.error('导出数据失败:', error);
+                    return null;
+                }
+            },
+            
+            // 导入数据
+            importData: function(jsonString) {
+                try {
+                    const imported = JSON.parse(jsonString);
+                    
+                    // 验证数据格式
+                    if (!imported.thoughts || !imported.models) {
+                        throw new Error('数据格式错误：缺少必要字段');
+                    }
+                    
+                    // 备份当前数据
+                    this.createBackup();
+                    
+                    // 导入数据
+                    this.thoughts = imported.thoughts;
+                    this.models = imported.models;
+                    this.tags = imported.tags || {};
+                    this.timeline = imported.timeline || [];
+                    this.modelConnections = imported.modelConnections || {};
+                    this.currentVersion = imported.currentVersion || this.currentVersion;
+                    this.lastSaved = imported.lastSaved || new Date().toISOString();
+                    this.nextThoughtId = imported.nextThoughtId || this.nextThoughtId;
+                    this.nextModelId = imported.nextModelId || this.nextModelId;
+                    
+                    // 保存到本地存储
+                    this.saveFullData();
+                    
+                    this.showNotification('数据导入成功', 'success');
+                    return { success: true, message: '数据导入成功' };
+                } catch (error) {
+                    console.error('导入数据失败:', error);
+                    this.showNotification('导入失败: ' + error.message, 'error');
+                    return { success: false, error: error.message };
+                }
+            },
+            
+            // 创建备份
+            createBackup: function() {
+                try {
+                    const backupKey = this.BACKUP_PREFIX + new Date().toISOString().replace(/[:.]/g, '-');
+                    const currentData = localStorage.getItem(this.STORAGE_KEY);
+                    
+                    if (currentData) {
+                        localStorage.setItem(backupKey, currentData);
+                        console.log('备份创建成功:', backupKey);
+                        return backupKey;
+                    }
+                } catch (error) {
+                    console.error('创建备份失败:', error);
+                }
+                return null;
+            },
+            
+            // 修复数据
+            repairData: function() {
+                try {
+                    // 尝试从备份恢复
+                    const backupKeys = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith(this.BACKUP_PREFIX)) {
+                            backupKeys.push(key);
                         }
-                    });
+                    }
+                    
+                    // 按时间排序，获取最新的备份
+                    backupKeys.sort((a, b) => b.localeCompare(a));
+                    
+                    if (backupKeys.length > 0) {
+                        const latestBackup = localStorage.getItem(backupKeys[0]);
+                        if (latestBackup) {
+                            localStorage.setItem(this.STORAGE_KEY, latestBackup);
+                            this.loadFullData();
+                            return true;
+                        }
+                    }
+                    
+                    // 如果没有备份，初始化新数据
+                    this.thoughts = [];
+                    this.models = [];
+                    this.tags = {};
+                    this.timeline = [];
+                    this.modelConnections = {};
+                    this.currentVersion = 'v22.48';
+                    this.lastSaved = new Date().toISOString();
+                    this.nextThoughtId = 124;
+                    this.nextModelId = 81;
+                    
+                    this.saveFullData();
+                    return true;
+                } catch (error) {
+                    console.error('修复数据失败:', error);
+                    return false;
+                }
+            },
+            
+            // 清除数据
+            clearData: function() {
+                if (confirm('确定要清除所有本地数据吗？此操作不可撤销。')) {
+                    localStorage.removeItem(this.STORAGE_KEY);
+                    this.thoughts = [];
+                    this.models = [];
+                    this.tags = {};
+                    this.timeline = [];
+                    this.modelConnections = {};
+                    this.currentVersion = 'v22.48';
+                    this.lastSaved = null;
+                    
+                    this.showNotification('数据已清除', 'success');
+                    return true;
+                }
+                return false;
+            },
+            
+            // 设置storage事件监听器（监听其他标签页的数据变化）
+            setupStorageListener: function() {
+                window.addEventListener('storage', (event) => {
+                    if (event.key === this.STORAGE_KEY) {
+                        console.log('检测到其他标签页的数据变化，重新加载数据');
+                        this.loadFullData();
+                        this.showNotification('数据已更新，重新加载中...', 'info');
+                        
+                        // 通知UI管理器重新渲染
+                        if (typeof MobileUI !== 'undefined' && MobileUI.currentView) {
+                            setTimeout(() => {
+                                MobileUI.renderView(MobileUI.currentView);
+                            }, 500);
+                        }
+                    }
                 });
             },
             
+            // 显示通知
+            showNotification: function(message, type = 'info') {
+                if (typeof MobileUI !== 'undefined' && MobileUI.showNotification) {
+                    MobileUI.showNotification(message, type);
+                }
+            },
+            
+            // 更新统计数据
+            updateStats: function() {
+                if (typeof MobileUI !== 'undefined' && MobileUI.updateStats) {
+                    MobileUI.updateStats();
+                }
+            },
+            
+            // 同步数据（重新加载）
+            syncData: function() {
+                this.loadFullData();
+                this.updateStats();
+                this.showNotification('数据同步完成', 'success');
+                return true;
+            }
+        };
+        
+        // ==================== 移动端UI管理器 ====================
+        const MobileUI = {
+            currentView: 'overview',
+            currentDetailId: null,
+            currentDetailType: null, // 'thought' 或 'model'
+            searchQuery: '',
+            currentPage: 1,
+            itemsPerPage: 10,
+            
+            // 初始化
+            init: function() {
+                // 初始化数据管理器
+                this.dataManager = MobileDataManager.init();
+                
+                // 设置UI事件
+                this.setupEvents();
+                
+                // 渲染初始视图
+                this.renderView('overview');
+                
+                // 更新统计数据
+                this.updateStats();
+                
+                // 更新热门标签
+                this.updateCommonTags();
+                
+                console.log('移动端UI初始化完成');
+            },
+            
+            // 设置事件监听器
+            setupEvents: function() {
+                // 菜单按钮
+                document.getElementById('menu-btn').addEventListener('click', () => this.openSidebar());
+                document.getElementById('close-sidebar').addEventListener('click', () => this.closeSidebar());
+                document.getElementById('overlay').addEventListener('click', () => this.closeSidebar());
+                
+                // 同步按钮
+                document.getElementById('sync-btn').addEventListener('click', () => this.syncData());
+                
+                // 底部导航
+                document.querySelectorAll('.mobile-nav-item[data-view]').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const view = item.getAttribute('data-view');
+                        this.navigateTo(view);
+                    });
+                });
+                
+                // 侧边栏导航
+                document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const view = link.getAttribute('data-view');
+                        this.navigateTo(view);
+                        this.closeSidebar();
+                    });
+                });
+                
+                // 监听数据保存事件
+                window.addEventListener('data-saved', () => {
+                    this.updateStats();
+                    this.updateCommonTags();
+                });
+                
+                // 监听键盘事件（Esc关闭侧边栏）
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeSidebar();
+                        this.closeModal();
+                    }
+                });
+                
+                // 监听返回按钮
+                window.addEventListener('popstate', () => {
+                    if (this.currentDetailId) {
+                        this.currentDetailId = null;
+                        this.currentDetailType = null;
+                        this.renderView(this.currentView);
+                    }
+                });
+            },
+            
+            // 导航到指定视图
+            navigateTo: function(view) {
+                this.currentView = view;
+                this.currentDetailId = null;
+                this.currentDetailType = null;
+                this.currentPage = 1;
+                
+                // 更新URL历史记录
+                history.pushState({ view: view }, '', `#${view}`);
+                
+                // 渲染视图
+                this.renderView(view);
+                
+                // 更新底部导航激活状态
+                this.updateNavActiveState(view);
+                
+                // 关闭侧边栏
+                this.closeSidebar();
+            },
+            
+            // 更新导航激活状态
+            updateNavActiveState: function(activeView) {
+                document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-view') === activeView) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-view') === activeView) {
+                        link.classList.add('active');
+                    }
+                });
+            },
+            
+            // 打开侧边栏
+            openSidebar: function() {
+                document.getElementById('sidebar').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
+            },
+            
+            // 关闭侧边栏
             closeSidebar: function() {
                 document.getElementById('sidebar').classList.remove('active');
                 document.getElementById('overlay').classList.remove('active');
             },
             
-            renderCurrentView: function() {
-                const content = document.getElementById('content');
+            // 打开模态框
+            openModal: function(modalId) {
+                document.getElementById(modalId).classList.add('active');
+            },
+            
+            // 关闭模态框
+            closeModal: function() {
+                document.querySelectorAll('.mobile-modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            },
+            
+            // 显示数据管理
+            showDataManagement: function() {
+                this.updateModalStats();
+                this.openModal('data-management-modal');
+            },
+            
+            // 更新模态框统计
+            updateModalStats: function() {
+                document.getElementById('modal-thought-count').textContent = this.dataManager.thoughts.length;
+                document.getElementById('modal-model-count').textContent = this.dataManager.models.length;
                 
-                switch(this.currentView) {
-                    case 'overview':
-                        content.innerHTML = this.renderOverview();
-                        break;
-                    case 'thoughts':
-                        content.innerHTML = this.renderThoughts();
-                        break;
-                    case 'models':
-                        content.innerHTML = this.renderModels();
-                        break;
-                    case 'search':
-                        content.innerHTML = this.renderSearch();
-                        break;
-                    default:
-                        content.innerHTML = this.renderOverview();
+                if (this.dataManager.lastSaved) {
+                    const savedTime = new Date(this.dataManager.lastSaved);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - savedTime) / (1000 * 60));
+                    
+                    let timeText = "刚刚";
+                    if (diffMinutes >= 60) {
+                        const diffHours = Math.floor(diffMinutes / 60);
+                        timeText = `${diffHours}小时前`;
+                    } else if (diffMinutes > 0) {
+                        timeText = `${diffMinutes}分钟前`;
+                    }
+                    
+                    document.getElementById('modal-last-saved').textContent = timeText;
+                } else {
+                    document.getElementById('modal-last-saved').textContent = "从未保存";
                 }
             },
             
+            // 渲染视图
+            renderView: function(view) {
+                const content = document.getElementById('content');
+                
+                // 显示加载中
+                content.innerHTML = `
+                    <div class="mobile-loading">
+                        <div class="mobile-loading-spinner"></div>
+                        <div>加载中...</div>
+                    </div>
+                `;
+                
+                // 延迟渲染以显示加载动画
+                setTimeout(() => {
+                    let html = '';
+                    
+                    switch(view) {
+                        case 'overview':
+                            html = this.renderOverview();
+                            break;
+                        case 'thoughts':
+                            html = this.renderThoughtsList();
+                            break;
+                        case 'models':
+                            html = this.renderModelsList();
+                            break;
+                        case 'search':
+                            html = this.renderSearch();
+                            break;
+                        case 'tags':
+                            html = this.renderTags();
+                            break;
+                        default:
+                            html = this.renderOverview();
+                    }
+                    
+                    content.innerHTML = html;
+                    
+                    // 如果是详情页，更新标题
+                    if (this.currentDetailId && this.currentDetailType) {
+                        this.updateDetailTitle();
+                    }
+                }, 100);
+            },
+            
+            // 渲染概览页面
             renderOverview: function() {
-                const recentThoughts = this.getRecentThoughts(5);
-                const recentModels = this.getRecentModels(5);
+                const recentThoughts = this.dataManager.getRecentThoughts(5);
+                const recentModels = this.dataManager.getRecentModels(5);
+                const topTags = this.dataManager.getTopTags(8);
                 
                 return `
                     <div class="mobile-search">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="quick-search" placeholder="快速搜索..." oninput="MobileUI.quickSearch()">
+                        <input type="text" id="quick-search" placeholder="快速搜索..." 
+                               oninput="MobileUI.quickSearch()">
                     </div>
                     
-                    <div class="mobile-card">
-                        <div class="mobile-card-title">系统概览</div>
-                        <div class="mobile-card-content">
-                            <p>思考记录: ${this.thoughts.length} 条</p>
-                            <p>思维模型: ${this.models.length} 个</p>
-                            <p>标签分类: ${Object.keys(this.tags).length} 个</p>
-                            <p>系统版本: ${this.getCurrentVersion()}</p>
+                    <div class="mobile-stats">
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.thoughts.length}</div>
+                            <div class="mobile-stat-label">思考记录</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.models.length}</div>
+                            <div class="mobile-stat-label">思维模型</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${Object.keys(this.dataManager.tags).length}</div>
+                            <div class="mobile-stat-label">标签分类</div>
+                        </div>
+                        <div class="mobile-stat-card">
+                            <div class="mobile-stat-value">${this.dataManager.currentVersion}</div>
+                            <div class="mobile-stat-label">系统版本</div>
                         </div>
                     </div>
                     
                     <div class="mobile-card">
-                        <div class="mobile-card-title">最近思考记录</div>
+                        <div class="mobile-card-title">
+                            <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+                            最近思考记录
+                        </div>
                         <div class="mobile-card-content">
                             ${recentThoughts.length > 0 ? 
                                 recentThoughts.map(thought => `
-                                    <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;" onclick="MobileUI.showThoughtDetail('${thought.id}')">
-                                        <div style="font-weight: 500; margin-bottom: 5px;">${thought.title || thought.id}</div>
-                                        <div style="font-size: 12px; color: #666;">${thought.date}</div>
+                                    <div class="mobile-list-item" onclick="MobileUI.showThoughtDetail('${thought.id}')" 
+                                         style="padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="font-weight: 500; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                ${thought.title || thought.id}
+                                            </div>
+                                            <div style="font-size: 12px; color: var(--text-light); margin-left: 10px;">
+                                                ${thought.date || ''}
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">
+                                            ${thought.tags && thought.tags.length > 0 ? 
+                                                thought.tags.slice(0, 2).map(tag => 
+                                                    `<span class="mobile-tag" style="font-size: 10px; padding: 2px 6px;">${tag}</span>`
+                                                ).join(' ') : 
+                                                '<span style="color: #999;">无标签</span>'
+                                            }
+                                        </div>
                                     </div>
                                 `).join('') : 
-                                '<div style="text-align: center; color: #999; padding: 20px;">暂无思考记录</div>'
+                                '<div style="text-align: center; color: var(--text-light); padding: 20px;">暂无思考记录</div>'
                             }
                         </div>
+                        ${recentThoughts.length > 0 ? `
+                            <div style="text-align: center; margin-top: 10px;">
+                                <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.navigateTo('thoughts')" 
+                                        style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                    查看全部思考记录
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <div class="mobile-card">
-                        <div class="mobile-card-title">最近思维模型</div>
+                        <div class="mobile-card-title">
+                            <i class="fas fa-cube" style="margin-right: 8px;"></i>
+                            最近思维模型
+                        </div>
                         <div class="mobile-card-content">
                             ${recentModels.length > 0 ? 
                                 recentModels.map(model => `
-                                    <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;" onclick="MobileUI.showModelDetail('${model.id}')">
-                                        <div style="font-weight: 500; margin-bottom: 5px;">${model.id}: ${model.name}</div>
-                                        <div style="font-size: 12px; color: #666;">${model.description.substring(0, 50)}...</div>
+                                    <div class="mobile-list-item" onclick="MobileUI.showModelDetail('${model.id}')" 
+                                         style="padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: 500; font-size: 14px;">
+                                                    <span class="model-id-link" onclick="event.stopPropagation(); MobileUI.showModelDetail('${model.id}')">
+                                                        ${model.id}
+                                                    </span>: ${model.name}
+                                                </div>
+                                                <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">
+                                                    ${model.description.substring(0, 60)}...
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 `).join('') : 
-                                '<div style="text-align: center; color: #999; padding: 20px;">暂无思维模型</div>'
+                                '<div style="text-align: center; color: var(--text-light); padding: 20px;">暂无思维模型</div>'
+                            }
+                        </div>
+                        ${recentModels.length > 0 ? `
+                            <div style="text-align: center; margin-top: 10px;">
+                                <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.navigateTo('models')" 
+                                        style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                    查看全部思维模型
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="mobile-card">
+                        <div class="mobile-card-title">
+                            <i class="fas fa-tags" style="margin-right: 8px;"></i>
+                            热门标签
+                        </div>
+                        <div class="mobile-tags">
+                            ${topTags.length > 0 ? 
+                                topTags.map(({tag, count}) => `
+                                    <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">
+                                        ${tag} (${count})
+                                    </span>
+                                `).join('') : 
+                                '<div style="text-align: center; color: var(--text-light); padding: 10px;">暂无标签数据</div>'
                             }
                         </div>
                     </div>
                 `;
             },
             
-            renderThoughts: function() {
-                const thoughts = this.thoughts;
+            // 渲染思考记录列表
+            renderThoughtsList: function() {
+                const thoughts = this.dataManager.thoughts;
+                const totalPages = Math.ceil(thoughts.length / this.itemsPerPage);
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = Math.min(startIndex + this.itemsPerPage, thoughts.length);
+                const pageThoughts = thoughts.slice(startIndex, endIndex);
                 
-                if (thoughts.length === 0) {
-                    return `
+                return `
+                    <div class="mobile-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="thought-search" placeholder="搜索思考记录..." 
+                               value="${this.searchQuery}" oninput="MobileUI.searchThoughts()">
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="font-size: 14px; color: var(--text-light);">
+                            共 ${thoughts.length} 条记录
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-light);">
+                            第 ${this.currentPage}/${totalPages || 1} 页
+                        </div>
+                    </div>
+                    
+                    ${thoughts.length > 0 ? `
+                        ${pageThoughts.map(thought => `
+                            <div class="mobile-card" onclick="MobileUI.showThoughtDetail('${thought.id}')">
+                                <div class="mobile-card-title">
+                                    ${thought.title || '无标题思考'}
+                                </div>
+                                <div class="mobile-card-subtitle">
+                                    <span class="thought-id-link" onclick="event.stopPropagation(); MobileUI.showThoughtDetail('${thought.id}')">
+                                        ${thought.id}
+                                    </span>
+                                    <span style="margin-left: 10px; font-size: 12px;">${thought.date || ''}</span>
+                                </div>
+                                <div class="mobile-card-content">
+                                    ${thought.sections && thought.sections["核心结论"] ? 
+                                        this.truncateText(thought.sections["核心结论"], 120) : 
+                                        thought.sections && thought.sections["状态看板"] ? 
+                                        this.truncateText(thought.sections["状态看板"], 120) : 
+                                        '暂无描述'
+                                    }
+                                </div>
+                                <div class="mobile-tags">
+                                    ${thought.tags && thought.tags.length > 0 ? 
+                                        thought.tags.map(tag => `
+                                            <span class="mobile-tag clickable" onclick="event.stopPropagation(); MobileUI.filterByTag('${tag}')">
+                                                ${tag}
+                                            </span>
+                                        `).join('') : 
+                                        '<span style="color: var(--text-light); font-size: 12px;">无标签</span>'
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+                    ` : `
                         <div class="mobile-empty">
                             <i class="fas fa-inbox"></i>
                             <p>暂无思考记录</p>
+                            <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.navigateTo('overview')" 
+                                    style="width: auto; padding: 10px 20px;">
+                                返回首页
+                            </button>
                         </div>
-                    `;
-                }
+                    `}
+                `;
+            },
+            
+            // 渲染思维模型列表
+            renderModelsList: function() {
+                const models = this.dataManager.models;
+                const totalPages = Math.ceil(models.length / this.itemsPerPage);
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = Math.min(startIndex + this.itemsPerPage, models.length);
+                const pageModels = models.slice(startIndex, endIndex);
                 
                 return `
                     <div class="mobile-search">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="thought-search" placeholder="搜索思考记录..." oninput="MobileUI.searchThoughts()">
+                        <input type="text" id="model-search" placeholder="搜索思维模型..." 
+                               value="${this.searchQuery}" oninput="MobileUI.searchModels()">
                     </div>
                     
-                    ${thoughts.map(thought => `
-                        <div class="mobile-card" onclick="MobileUI.showThoughtDetail('${thought.id}')">
-                            <div class="mobile-card-title">${thought.title || thought.id}</div>
-                            <div class="mobile-card-content">
-                                ${thought.sections && thought.sections["核心结论"] ? 
-                                    thought.sections["核心结论"].substring(0, 100) + '...' : 
-                                    '暂无描述'
-                                }
-                            </div>
-                            <div class="mobile-card-meta">
-                                <span>${thought.date}</span>
-                                <span>${thought.id}</span>
-                            </div>
-                            <div class="mobile-tags">
-                                ${thought.tags ? thought.tags.map(tag => `<span class="mobile-tag">${tag}</span>`).join('') : ''}
-                            </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="font-size: 14px; color: var(--text-light);">
+                            共 ${models.length} 个模型
                         </div>
-                    `).join('')}
-                `;
-            },
-            
-            renderModels: function() {
-                const models = this.models;
-                
-                if (models.length === 0) {
-                    return `
+                        <div style="font-size: 14px; color: var(--text-light);">
+                            第 ${this.currentPage}/${totalPages || 1} 页
+                        </div>
+                    </div>
+                    
+                    ${models.length > 0 ? `
+                        ${pageModels.map(model => `
+                            <div class="mobile-card" onclick="MobileUI.showModelDetail('${model.id}')">
+                                <div class="mobile-card-title">
+                                    <span class="model-id-link" onclick="event.stopPropagation(); MobileUI.showModelDetail('${model.id}')">
+                                        ${model.id}
+                                    </span>: ${model.name}
+                                </div>
+                                <div class="mobile-card-subtitle">
+                                    创建: ${model.date || '未知'} | 
+                                    来源: ${model.fromThought ? 
+                                        `<span class="thought-id-link" onclick="event.stopPropagation(); MobileUI.showThoughtDetail('${model.fromThought}')">
+                                            ${model.fromThought}
+                                        </span>` : 
+                                        '无'
+                                    }
+                                </div>
+                                <div class="mobile-card-content">
+                                    ${this.truncateText(model.description, 150)}
+                                </div>
+                                <div class="mobile-tags">
+                                    ${model.tags && model.tags.length > 0 ? 
+                                        model.tags.map(tag => `
+                                            <span class="mobile-tag clickable" onclick="event.stopPropagation(); MobileUI.filterByTag('${tag}')">
+                                                ${tag}
+                                            </span>
+                                        `).join('') : 
+                                        '<span style="color: var(--text-light); font-size: 12px;">无标签</span>'
+                                    }
+                                </div>
+                                ${model.relatedModels && model.relatedModels.length > 0 ? `
+                                    <div style="margin-top: 10px; font-size: 12px; color: var(--text-light);">
+                                        关联模型: 
+                                        ${model.relatedModels.slice(0, 3).map(id => `
+                                            <span class="model-id-link" onclick="event.stopPropagation(); MobileUI.showModelDetail('${id}')">
+                                                ${id}
+                                            </span>
+                                        `).join(', ')}
+                                        ${model.relatedModels.length > 3 ? `...` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                        
+                        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+                    ` : `
                         <div class="mobile-empty">
                             <i class="fas fa-cubes"></i>
                             <p>暂无思维模型</p>
+                            <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.navigateTo('overview')" 
+                                    style="width: auto; padding: 10px 20px;">
+                                返回首页
+                            </button>
                         </div>
-                    `;
-                }
-                
-                return `
-                    <div class="mobile-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="model-search" placeholder="搜索思维模型..." oninput="MobileUI.searchModels()">
-                    </div>
-                    
-                    ${models.map(model => `
-                        <div class="mobile-card" onclick="MobileUI.showModelDetail('${model.id}')">
-                            <div class="mobile-card-title">${model.id}: ${model.name}</div>
-                            <div class="mobile-card-content">
-                                ${model.description.substring(0, 150)}...
-                            </div>
-                            <div class="mobile-card-meta">
-                                <span>创建: ${model.date}</span>
-                                <span>来源: ${model.fromThought || '无'}</span>
-                            </div>
-                            <div class="mobile-tags">
-                                ${model.tags ? model.tags.map(tag => `<span class="mobile-tag">${tag}</span>`).join('') : ''}
-                            </div>
-                        </div>
-                    `).join('')}
+                    `}
                 `;
             },
             
+            // 渲染搜索页面
             renderSearch: function() {
                 return `
-                    <div class="mobile-search" style="margin-bottom: 20px;">
+                    <div class="mobile-search">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="full-search" placeholder="搜索思考记录或思维模型..." oninput="MobileUI.performSearch()">
+                        <input type="text" id="full-search" placeholder="搜索思考记录、思维模型或标签..." 
+                               value="${this.searchQuery}" oninput="MobileUI.performSearch()">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 14px; font-weight: 500; color: var(--primary-color); margin-bottom: 8px;">
+                            搜索类型
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <button id="search-all" class="mobile-page-btn active" onclick="MobileUI.setSearchType('all')" 
+                                    style="padding: 8px 15px; font-size: 13px;">
+                                全部
+                            </button>
+                            <button id="search-thoughts" class="mobile-page-btn" onclick="MobileUI.setSearchType('thoughts')" 
+                                    style="padding: 8px 15px; font-size: 13px;">
+                                思考记录
+                            </button>
+                            <button id="search-models" class="mobile-page-btn" onclick="MobileUI.setSearchType('models')" 
+                                    style="padding: 8px 15px; font-size: 13px;">
+                                思维模型
+                            </button>
+                            <button id="search-tags" class="mobile-page-btn" onclick="MobileUI.setSearchType('tags')" 
+                                    style="padding: 8px 15px; font-size: 13px;">
+                                标签
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="search-results">
-                        <div style="text-align: center; color: #999; padding: 40px 20px;">
+                        <div class="mobile-empty">
                             <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px;"></i>
                             <p>输入关键词开始搜索</p>
                         </div>
@@ -829,12 +1921,56 @@
                 `;
             },
             
+            // 渲染标签页面
+            renderTags: function() {
+                const tags = this.dataManager.getTopTags(50);
+                
+                return `
+                    <div class="mobile-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="tag-search" placeholder="搜索标签..." 
+                               oninput="MobileUI.searchTags()">
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="font-size: 14px; color: var(--text-light);">
+                            共 ${Object.keys(this.dataManager.tags).length} 个标签
+                        </div>
+                    </div>
+                    
+                    ${tags.length > 0 ? `
+                        <div class="mobile-tags" style="justify-content: center;">
+                            ${tags.map(({tag, count}) => `
+                                <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')" 
+                                      style="font-size: ${12 + Math.min(count, 10)}px;">
+                                    ${tag} (${count})
+                                </span>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="mobile-empty">
+                            <i class="fas fa-tags"></i>
+                            <p>暂无标签数据</p>
+                            <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.navigateTo('overview')" 
+                                    style="width: auto; padding: 10px 20px;">
+                                返回首页
+                            </button>
+                        </div>
+                    `}
+                `;
+            },
+            
+            // 渲染思考详情
             renderThoughtDetail: function(thought) {
                 if (!thought) {
                     return `
                         <div class="mobile-empty">
                             <i class="fas fa-exclamation-circle"></i>
                             <p>未找到思考记录</p>
+                            <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.navigateTo('thoughts')" 
+                                    style="width: auto; padding: 10px 20px;">
+                                返回列表
+                            </button>
                         </div>
                     `;
                 }
@@ -842,21 +1978,33 @@
                 let html = `
                     <div class="mobile-detail">
                         <div class="mobile-detail-header">
-                            <div class="mobile-detail-title">${thought.title || '无标题'}</div>
+                            <div class="mobile-detail-title">${thought.title || '无标题思考'}</div>
                             <div class="mobile-detail-id">${thought.id}</div>
-                            <div style="margin-top: 10px;">
-                                ${thought.tags ? thought.tags.map(tag => `<span class="mobile-tag">${tag}</span>`).join(' ') : ''}
+                            <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${thought.tags ? thought.tags.map(tag => `
+                                    <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">
+                                        ${tag}
+                                    </span>
+                                `).join('') : ''}
                             </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.navigateTo('thoughts')" 
+                                    style="padding: 10px;">
+                                <i class="fas fa-arrow-left"></i> 返回列表
+                            </button>
                         </div>
                 `;
                 
                 // 渲染状态看板
                 if (thought.sections && thought.sections["状态看板"]) {
+                    const statusContent = this.processLinks(thought.sections["状态看板"]);
                     html += `
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-tachometer-alt"></i> 状态看板</h4>
                             <div class="mobile-detail-content">
-                                <pre style="white-space: pre-wrap; font-family: inherit; font-size: 13px;">${thought.sections["状态看板"]}</pre>
+                                <pre style="white-space: pre-wrap; font-family: inherit; font-size: 13px;">${statusContent}</pre>
                             </div>
                         </div>
                     `;
@@ -864,11 +2012,12 @@
                 
                 // 渲染核心结论
                 if (thought.sections && thought.sections["核心结论"]) {
+                    const conclusionContent = this.processLinks(thought.sections["核心结论"]);
                     html += `
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-bullseye"></i> 核心结论</h4>
                             <div class="mobile-detail-content">
-                                <pre style="white-space: pre-wrap; font-family: inherit;">${thought.sections["核心结论"]}</pre>
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${conclusionContent}</pre>
                             </div>
                         </div>
                     `;
@@ -876,11 +2025,12 @@
                 
                 // 渲染模型延伸与整合
                 if (thought.sections && thought.sections["模型延伸与整合"]) {
+                    const modelContent = this.processLinks(thought.sections["模型延伸与整合"]);
                     html += `
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-puzzle-piece"></i> 模型延伸与整合</h4>
                             <div class="mobile-detail-content">
-                                <pre style="white-space: pre-wrap; font-family: inherit;">${thought.sections["模型延伸与整合"]}</pre>
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${modelContent}</pre>
                             </div>
                         </div>
                     `;
@@ -888,34 +2038,45 @@
                 
                 // 渲染行动/思维要点
                 if (thought.sections && thought.sections["行动/思维要点"]) {
+                    const actionContent = this.processLinks(thought.sections["行动/思维要点"]);
                     html += `
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-lightbulb"></i> 行动/思维要点</h4>
                             <div class="mobile-detail-content">
-                                <pre style="white-space: pre-wrap; font-family: inherit;">${thought.sections["行动/思维要点"]}</pre>
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${actionContent}</pre>
                             </div>
                         </div>
                     `;
                 }
                 
-                html += `
-                        <div style="margin-top: 20px;">
-                            <button class="mobile-btn mobile-btn-secondary" onclick="MobileDataManager.renderCurrentView()">
-                                <i class="fas fa-arrow-left"></i> 返回列表
-                            </button>
+                // 渲染架构更新
+                if (thought.sections && thought.sections["架构更新"]) {
+                    const updateContent = this.processLinks(thought.sections["架构更新"]);
+                    html += `
+                        <div class="mobile-detail-section">
+                            <h4><i class="fas fa-code-branch"></i> 架构更新</h4>
+                            <div class="mobile-detail-content">
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${updateContent}</pre>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
                 
+                html += `</div>`;
                 return html;
             },
             
+            // 渲染模型详情
             renderModelDetail: function(model) {
                 if (!model) {
                     return `
                         <div class="mobile-empty">
                             <i class="fas fa-exclamation-circle"></i>
                             <p>未找到思维模型</p>
+                            <button class="mobile-btn mobile-btn-primary" onclick="MobileUI.navigateTo('models')" 
+                                    style="width: auto; padding: 10px 20px;">
+                                返回列表
+                            </button>
                         </div>
                     `;
                 }
@@ -923,124 +2084,288 @@
                 let html = `
                     <div class="mobile-detail">
                         <div class="mobile-detail-header">
-                            <div class="mobile-detail-title">${model.name}</div>
-                            <div class="mobile-detail-id">${model.id}</div>
-                            <div style="margin-top: 10px;">
-                                ${model.tags ? model.tags.map(tag => `<span class="mobile-tag">${tag}</span>`).join(' ') : ''}
+                            <div class="mobile-detail-title">
+                                <span class="model-id-link" onclick="MobileUI.showModelDetail('${model.id}')">
+                                    ${model.id}
+                                </span>: ${model.name}
                             </div>
+                            <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${model.tags ? model.tags.map(tag => `
+                                    <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">
+                                        ${tag}
+                                    </span>
+                                `).join('') : ''}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.navigateTo('models')" 
+                                    style="padding: 10px;">
+                                <i class="fas fa-arrow-left"></i> 返回列表
+                            </button>
                         </div>
                         
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-info-circle"></i> 模型描述</h4>
                             <div class="mobile-detail-content">
-                                <pre style="white-space: pre-wrap; font-family: inherit;">${model.description}</pre>
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${this.processLinks(model.description)}</pre>
                             </div>
                         </div>
                 `;
                 
+                // 来源思考
                 if (model.fromThought) {
                     html += `
                         <div class="mobile-detail-section">
                             <h4><i class="fas fa-link"></i> 来源思考</h4>
                             <div class="mobile-detail-content">
-                                <p>来源于: <span style="color: var(--accent-color);">${model.fromThought}</span></p>
+                                <p>此模型来源于思考记录: 
+                                    <span class="thought-id-link" onclick="MobileUI.showThoughtDetail('${model.fromThought}')">
+                                        ${model.fromThought}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                     `;
                 }
                 
+                // 关联模型
                 if (model.relatedModels && model.relatedModels.length > 0) {
                     html += `
                         <div class="mobile-detail-section">
-                            <h4><i class="fas fa-project-diagram"></i> 关联模型</h4>
+                            <h4><i class="fas fa-project-diagram"></i> 关联模型 (${model.relatedModels.length}个)</h4>
                             <div class="mobile-detail-content">
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                    ${model.relatedModels.map(id => `<span class="mobile-tag">${id}</span>`).join('')}
+                                <div class="mobile-network">
+                                    ${model.relatedModels.map(id => {
+                                        const relatedModel = this.dataManager.getModelById(id);
+                                        if (relatedModel) {
+                                            return `
+                                                <div class="mobile-network-node" onclick="MobileUI.showModelDetail('${id}')">
+                                                    ${id}
+                                                </div>
+                                            `;
+                                        } else {
+                                            return `
+                                                <div class="mobile-network-node" style="background-color: rgba(244, 67, 54, 0.1); color: var(--danger-color);">
+                                                    ${id} (未找到)
+                                                </div>
+                                            `;
+                                        }
+                                    }).join('')}
                                 </div>
                             </div>
                         </div>
                     `;
                 }
                 
-                html += `
-                        <div style="margin-top: 20px;">
-                            <button class="mobile-btn mobile-btn-secondary" onclick="MobileDataManager.renderCurrentView()">
-                                <i class="fas fa-arrow-left"></i> 返回列表
-                            </button>
+                // 显示关联网络
+                const network = this.dataManager.modelConnections[model.id];
+                if (network && network.length > 0) {
+                    html += `
+                        <div class="mobile-detail-section">
+                            <h4><i class="fas fa-project-diagram"></i> 关联网络</h4>
+                            <div class="mobile-detail-content">
+                                <p>此模型与以下 ${network.length} 个模型相关联：</p>
+                                <div class="mobile-network" style="margin-top: 10px;">
+                                    <div class="mobile-network-node center">${model.id}</div>
+                    `;
+                    
+                    network.forEach(modelId => {
+                        html += `<div class="mobile-network-node" onclick="MobileUI.showModelDetail('${modelId}')">${modelId}</div>`;
+                    });
+                    
+                    html += `
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
                 
+                html += `</div>`;
                 return html;
-            }
-        };
-        
-        // ==================== 移动端UI管理器 ====================
-        const MobileUI = {
-            currentDetail: null, // 当前查看的详情类型：thought 或 model
-            currentDetailId: null, // 当前查看的详情ID
-            
-            init: function() {
-                MobileDataManager.init();
             },
             
+            // 处理文本中的链接（将#123和M-80转换为可点击链接）
+            processLinks: function(text) {
+                if (!text) return '';
+                
+                // 处理思考ID (#123)
+                let processed = text.replace(/#(\d+)/g, (match, id) => {
+                    return `<span class="thought-id-link" onclick="MobileUI.showThoughtDetail('#${id}')">${match}</span>`;
+                });
+                
+                // 处理模型ID (M-80)
+                processed = processed.replace(/M-\d+/g, (match) => {
+                    return `<span class="model-id-link" onclick="MobileUI.showModelDetail('${match}')">${match}</span>`;
+                });
+                
+                return processed;
+            },
+            
+            // 显示思考详情
+            showThoughtDetail: function(id) {
+                const thought = this.dataManager.getThoughtById(id);
+                this.currentDetailId = id;
+                this.currentDetailType = 'thought';
+                this.currentView = 'thought-detail';
+                
+                const content = document.getElementById('content');
+                content.innerHTML = this.renderThoughtDetail(thought);
+                
+                // 更新历史记录
+                history.pushState({ detail: 'thought', id: id }, '', `#thought/${id}`);
+            },
+            
+            // 显示模型详情
+            showModelDetail: function(id) {
+                const model = this.dataManager.getModelById(id);
+                this.currentDetailId = id;
+                this.currentDetailType = 'model';
+                this.currentView = 'model-detail';
+                
+                const content = document.getElementById('content');
+                content.innerHTML = this.renderModelDetail(model);
+                
+                // 更新历史记录
+                history.pushState({ detail: 'model', id: id }, '', `#model/${id}`);
+            },
+            
+            // 更新详情页标题
+            updateDetailTitle: function() {
+                let title = '思维协同处理器';
+                
+                if (this.currentDetailType === 'thought') {
+                    const thought = this.dataManager.getThoughtById(this.currentDetailId);
+                    if (thought) {
+                        title = thought.title || thought.id;
+                    }
+                } else if (this.currentDetailType === 'model') {
+                    const model = this.dataManager.getModelById(this.currentDetailId);
+                    if (model) {
+                        title = `${model.id}: ${model.name}`;
+                    }
+                }
+                
+                document.getElementById('logo-text').textContent = title.length > 20 ? 
+                    title.substring(0, 20) + '...' : title;
+            },
+            
+            // 快速搜索
             quickSearch: function() {
                 const query = document.getElementById('quick-search').value.trim();
                 if (!query) return;
                 
-                const results = MobileDataManager.search(query);
-                this.showSearchResults(results);
+                this.searchQuery = query;
+                this.navigateTo('search');
+                setTimeout(() => {
+                    this.performSearch();
+                }, 100);
             },
             
+            // 搜索思考记录
             searchThoughts: function() {
                 const query = document.getElementById('thought-search').value.trim();
-                const thoughts = MobileDataManager.thoughts.filter(thought => {
-                    return (
-                        (thought.title && thought.title.toLowerCase().includes(query.toLowerCase())) ||
-                        (thought.id && thought.id.toLowerCase().includes(query.toLowerCase())) ||
-                        (thought.tags && thought.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))
-                    );
-                });
+                this.searchQuery = query;
                 
-                this.renderFilteredThoughts(thoughts);
+                if (!query) {
+                    this.currentPage = 1;
+                    this.renderView('thoughts');
+                    return;
+                }
+                
+                const results = this.dataManager.search(query, 'thoughts');
+                this.renderSearchResults(results, query, 'thoughts');
             },
             
+            // 搜索思维模型
             searchModels: function() {
                 const query = document.getElementById('model-search').value.trim();
-                const models = MobileDataManager.models.filter(model => {
-                    return (
-                        (model.name && model.name.toLowerCase().includes(query.toLowerCase())) ||
-                        (model.id && model.id.toLowerCase().includes(query.toLowerCase())) ||
-                        (model.tags && model.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))
-                    );
-                });
+                this.searchQuery = query;
                 
-                this.renderFilteredModels(models);
+                if (!query) {
+                    this.currentPage = 1;
+                    this.renderView('models');
+                    return;
+                }
+                
+                const results = this.dataManager.search(query, 'models');
+                this.renderSearchResults(results, query, 'models');
             },
             
+            // 搜索标签
+            searchTags: function() {
+                const query = document.getElementById('tag-search').value.trim();
+                const tags = Object.keys(this.dataManager.tags).filter(tag => 
+                    tag.toLowerCase().includes(query.toLowerCase())
+                ).map(tag => ({ tag, count: this.dataManager.tags[tag] }));
+                
+                const container = document.querySelector('.mobile-tags');
+                if (container) {
+                    if (tags.length > 0) {
+                        container.innerHTML = tags.map(({tag, count}) => `
+                            <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">
+                                ${tag} (${count})
+                            </span>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; color: var(--text-light); padding: 20px;">未找到相关标签</div>';
+                    }
+                }
+            },
+            
+            // 执行搜索
             performSearch: function() {
                 const query = document.getElementById('full-search').value.trim();
+                this.searchQuery = query;
+                
                 if (!query) {
                     document.getElementById('search-results').innerHTML = `
-                        <div style="text-align: center; color: #999; padding: 40px 20px;">
-                            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <div class="mobile-empty">
+                            <i class="fas fa-search"></i>
                             <p>输入关键词开始搜索</p>
                         </div>
                     `;
                     return;
                 }
                 
-                const results = MobileDataManager.search(query);
-                this.showSearchResults(results, query);
+                const searchType = this.getCurrentSearchType();
+                const results = this.dataManager.search(query, searchType);
+                this.renderSearchResults(results, query, searchType);
             },
             
-            showSearchResults: function(results, query = '') {
+            // 获取当前搜索类型
+            getCurrentSearchType: function() {
+                const buttons = document.querySelectorAll('.mobile-page-btn');
+                for (let btn of buttons) {
+                    if (btn.classList.contains('active')) {
+                        return btn.id.replace('search-', '');
+                    }
+                }
+                return 'all';
+            },
+            
+            // 设置搜索类型
+            setSearchType: function(type) {
+                // 更新按钮状态
+                document.querySelectorAll('.mobile-page-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`search-${type}`).classList.add('active');
+                
+                // 重新搜索
+                if (this.searchQuery) {
+                    this.performSearch();
+                }
+            },
+            
+            // 渲染搜索结果
+            renderSearchResults: function(results, query, type = 'all') {
                 const container = document.getElementById('search-results');
                 
-                if (results.thoughts.length === 0 && results.models.length === 0) {
+                if (results.thoughts.length === 0 && results.models.length === 0 && results.tags.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; color: #999; padding: 40px 20px;">
-                            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <div class="mobile-empty">
+                            <i class="fas fa-search"></i>
                             <p>未找到相关结果: "${query}"</p>
                         </div>
                     `;
@@ -1048,42 +2373,99 @@
                 }
                 
                 let html = `
-                    <div style="margin-bottom: 20px; color: #666; font-size: 14px;">
-                        找到 ${results.thoughts.length + results.models.length} 个结果
+                    <div style="margin-bottom: 20px; color: var(--text-light); font-size: 14px;">
+                        找到 ${results.thoughts.length + results.models.length + results.tags.length} 个结果
                     </div>
                 `;
                 
-                if (results.thoughts.length > 0) {
+                // 显示标签结果
+                if (results.tags.length > 0 && (type === 'all' || type === 'tags')) {
                     html += `
-                        <div style="margin-bottom: 20px;">
-                            <div style="font-weight: 500; margin-bottom: 10px; color: var(--primary-color);">思考记录 (${results.thoughts.length})</div>
-                            ${results.thoughts.map(thought => `
-                                <div class="mobile-card" onclick="MobileUI.showThoughtDetail('${thought.id}')">
-                                    <div class="mobile-card-title">${thought.title || thought.id}</div>
-                                    <div class="mobile-card-content">
-                                        ${thought.sections && thought.sections["核心结论"] ? 
-                                            thought.sections["核心结论"].substring(0, 80) + '...' : 
-                                            '暂无描述'
-                                        }
-                                    </div>
-                                </div>
-                            `).join('')}
+                        <div class="mobile-card">
+                            <div class="mobile-card-title">
+                                <i class="fas fa-tags" style="margin-right: 8px;"></i>
+                                相关标签 (${results.tags.length})
+                            </div>
+                            <div class="mobile-tags">
+                                ${results.tags.map(({tag, count}) => `
+                                    <span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">
+                                        ${tag} (${count})
+                                    </span>
+                                `).join('')}
+                            </div>
                         </div>
                     `;
                 }
                 
-                if (results.models.length > 0) {
+                // 显示思考记录结果
+                if (results.thoughts.length > 0 && (type === 'all' || type === 'thoughts')) {
                     html += `
-                        <div>
-                            <div style="font-weight: 500; margin-bottom: 10px; color: var(--primary-color);">思维模型 (${results.models.length})</div>
-                            ${results.models.map(model => `
-                                <div class="mobile-card" onclick="MobileUI.showModelDetail('${model.id}')">
-                                    <div class="mobile-card-title">${model.id}: ${model.name}</div>
-                                    <div class="mobile-card-content">
-                                        ${model.description.substring(0, 100)}...
+                        <div class="mobile-card">
+                            <div class="mobile-card-title">
+                                <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+                                思考记录 (${results.thoughts.length})
+                            </div>
+                            <div class="mobile-card-content">
+                                ${results.thoughts.slice(0, 5).map(thought => `
+                                    <div class="mobile-list-item" onclick="MobileUI.showThoughtDetail('${thought.id}')" 
+                                         style="padding: 10px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 4px;">
+                                            ${thought.title || thought.id}
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-light);">
+                                            ${thought.tags && thought.tags.length > 0 ? 
+                                                thought.tags.slice(0, 2).map(tag => 
+                                                    `<span class="mobile-tag" style="font-size: 10px; padding: 2px 6px;">${tag}</span>`
+                                                ).join(' ') : 
+                                                '<span style="color: #999;">无标签</span>'
+                                            }
+                                        </div>
                                     </div>
+                                `).join('')}
+                            </div>
+                            ${results.thoughts.length > 5 ? `
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <button class="mobile-btn mobile-btn-secondary" 
+                                            onclick="MobileUI.searchThoughts(); MobileUI.setSearchType('thoughts')"
+                                            style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                        查看全部 ${results.thoughts.length} 条结果
+                                    </button>
                                 </div>
-                            `).join('')}
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // 显示思维模型结果
+                if (results.models.length > 0 && (type === 'all' || type === 'models')) {
+                    html += `
+                        <div class="mobile-card">
+                            <div class="mobile-card-title">
+                                <i class="fas fa-cube" style="margin-right: 8px;"></i>
+                                思维模型 (${results.models.length})
+                            </div>
+                            <div class="mobile-card-content">
+                                ${results.models.slice(0, 5).map(model => `
+                                    <div class="mobile-list-item" onclick="MobileUI.showModelDetail('${model.id}')" 
+                                         style="padding: 10px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 4px;">
+                                            <span class="model-id-link">${model.id}</span>: ${model.name}
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-light);">
+                                            ${this.truncateText(model.description, 80)}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${results.models.length > 5 ? `
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <button class="mobile-btn mobile-btn-secondary" 
+                                            onclick="MobileUI.searchModels(); MobileUI.setSearchType('models')"
+                                            style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                        查看全部 ${results.models.length} 条结果
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }
@@ -1091,206 +2473,455 @@
                 container.innerHTML = html;
             },
             
-            renderFilteredThoughts: function(thoughts) {
-                const content = document.getElementById('content');
-                if (thoughts.length === 0) {
-                    content.innerHTML = `
-                        <div class="mobile-empty">
-                            <i class="fas fa-search"></i>
-                            <p>未找到相关思考记录</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                content.innerHTML = `
-                    <div class="mobile-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="thought-search" placeholder="搜索思考记录..." oninput="MobileUI.searchThoughts()" value="${document.getElementById('thought-search')?.value || ''}">
-                    </div>
-                    
-                    <div style="margin-bottom: 15px; color: #666; font-size: 14px;">
-                        找到 ${thoughts.length} 个结果
-                    </div>
-                    
-                    ${thoughts.map(thought => `
-                        <div class="mobile-card" onclick="MobileUI.showThoughtDetail('${thought.id}')">
-                            <div class="mobile-card-title">${thought.title || thought.id}</div>
-                            <div class="mobile-card-content">
-                                ${thought.sections && thought.sections["核心结论"] ? 
-                                    thought.sections["核心结论"].substring(0, 100) + '...' : 
-                                    '暂无描述'
-                                }
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
-            },
-            
-            renderFilteredModels: function(models) {
-                const content = document.getElementById('content');
-                if (models.length === 0) {
-                    content.innerHTML = `
-                        <div class="mobile-empty">
-                            <i class="fas fa-search"></i>
-                            <p>未找到相关思维模型</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                content.innerHTML = `
-                    <div class="mobile-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="model-search" placeholder="搜索思维模型..." oninput="MobileUI.searchModels()" value="${document.getElementById('model-search')?.value || ''}">
-                    </div>
-                    
-                    <div style="margin-bottom: 15px; color: #666; font-size: 14px;">
-                        找到 ${models.length} 个结果
-                    </div>
-                    
-                    ${models.map(model => `
-                        <div class="mobile-card" onclick="MobileUI.showModelDetail('${model.id}')">
-                            <div class="mobile-card-title">${model.id}: ${model.name}</div>
-                            <div class="mobile-card-content">
-                                ${model.description.substring(0, 150)}...
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
-            },
-            
-            showThoughtDetail: function(id) {
-                const thought = MobileDataManager.getThoughtById(id);
-                const content = document.getElementById('content');
-                
-                this.currentDetail = 'thought';
-                this.currentDetailId = id;
-                
-                content.innerHTML = MobileDataManager.renderThoughtDetail(thought);
-            },
-            
-            showModelDetail: function(id) {
-                const model = MobileDataManager.getModelById(id);
-                const content = document.getElementById('content');
-                
-                this.currentDetail = 'model';
-                this.currentDetailId = id;
-                
-                content.innerHTML = MobileDataManager.renderModelDetail(model);
-            },
-            
+            // 按标签筛选
             filterByTag: function(tag) {
-                const thoughtsWithTag = MobileDataManager.thoughts.filter(thought => 
-                    thought.tags && thought.tags.includes(tag)
-                );
-                
-                const modelsWithTag = MobileDataManager.models.filter(model => 
-                    model.tags && model.tags.includes(tag)
-                );
-                
-                const content = document.getElementById('content');
+                const results = this.dataManager.filterByTag(tag);
                 
                 let html = `
                     <div class="mobile-card">
-                        <div class="mobile-card-title">标签: ${tag}</div>
+                        <div class="mobile-card-title">
+                            <i class="fas fa-tag" style="margin-right: 8px;"></i>
+                            标签: ${tag}
+                        </div>
                         <div class="mobile-card-content">
-                            找到 ${thoughtsWithTag.length + modelsWithTag.length} 条相关内容
+                            找到 ${results.thoughts.length + results.models.length} 条相关内容
                         </div>
                     </div>
                 `;
                 
-                if (thoughtsWithTag.length > 0) {
+                if (results.thoughts.length > 0) {
                     html += `
                         <div class="mobile-card">
-                            <div class="mobile-card-title">相关思考记录 (${thoughtsWithTag.length})</div>
+                            <div class="mobile-card-title">
+                                <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+                                相关思考记录 (${results.thoughts.length})
+                            </div>
                             <div class="mobile-card-content">
-                                ${thoughtsWithTag.map(thought => `
-                                    <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;" onclick="MobileUI.showThoughtDetail('${thought.id}')">
-                                        <div style="font-weight: 500; margin-bottom: 5px;">${thought.title || thought.id}</div>
+                                ${results.thoughts.slice(0, 5).map(thought => `
+                                    <div class="mobile-list-item" onclick="MobileUI.showThoughtDetail('${thought.id}')" 
+                                         style="padding: 10px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 14px;">
+                                            ${thought.title || thought.id}
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
+                            ${results.thoughts.length > 5 ? `
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.showAllTagResults('thoughts', '${tag}')"
+                                            style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                        查看全部 ${results.thoughts.length} 条思考记录
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }
                 
-                if (modelsWithTag.length > 0) {
+                if (results.models.length > 0) {
                     html += `
                         <div class="mobile-card">
-                            <div class="mobile-card-title">相关思维模型 (${modelsWithTag.length})</div>
+                            <div class="mobile-card-title">
+                                <i class="fas fa-cube" style="margin-right: 8px;"></i>
+                                相关思维模型 (${results.models.length})
+                            </div>
                             <div class="mobile-card-content">
-                                ${modelsWithTag.map(model => `
-                                    <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;" onclick="MobileUI.showModelDetail('${model.id}')">
-                                        <div style="font-weight: 500; margin-bottom: 5px;">${model.id}: ${model.name}</div>
+                                ${results.models.slice(0, 5).map(model => `
+                                    <div class="mobile-list-item" onclick="MobileUI.showModelDetail('${model.id}')" 
+                                         style="padding: 10px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 14px;">
+                                            <span class="model-id-link">${model.id}</span>: ${model.name}
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
+                            ${results.models.length > 5 ? `
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <button class="mobile-btn mobile-btn-secondary" onclick="MobileUI.showAllTagResults('models', '${tag}')"
+                                            style="padding: 8px 15px; font-size: 13px; width: auto;">
+                                        查看全部 ${results.models.length} 个思维模型
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }
                 
-                content.innerHTML = html;
-                MobileDataManager.closeSidebar();
+                if (results.thoughts.length === 0 && results.models.length === 0) {
+                    html += `
+                        <div class="mobile-empty">
+                            <i class="fas fa-search"></i>
+                            <p>暂无相关记录</p>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                this.closeSidebar();
+            },
+            
+            // 显示所有标签结果
+            showAllTagResults: function(type, tag) {
+                const results = this.dataManager.filterByTag(tag);
+                
+                if (type === 'thoughts') {
+                    let html = `
+                        <div class="mobile-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="在此结果中搜索..." 
+                                   oninput="MobileUI.searchInTagResults('${tag}', this.value, 'thoughts')">
+                        </div>
+                        
+                        <div class="mobile-card">
+                            <div class="mobile-card-title">
+                                <i class="fas fa-tag" style="margin-right: 8px;"></i>
+                                标签 "${tag}" 的所有思考记录 (${results.thoughts.length})
+                            </div>
+                        </div>
+                    `;
+                    
+                    results.thoughts.forEach(thought => {
+                        html += `
+                            <div class="mobile-card" onclick="MobileUI.showThoughtDetail('${thought.id}')">
+                                <div class="mobile-card-title">${thought.title || thought.id}</div>
+                                <div class="mobile-card-content">
+                                    ${thought.sections && thought.sections["核心结论"] ? 
+                                        this.truncateText(thought.sections["核心结论"], 100) : 
+                                        '暂无描述'
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('content').innerHTML = html;
+                } else if (type === 'models') {
+                    let html = `
+                        <div class="mobile-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="在此结果中搜索..." 
+                                   oninput="MobileUI.searchInTagResults('${tag}', this.value, 'models')">
+                        </div>
+                        
+                        <div class="mobile-card">
+                            <div class="mobile-card-title">
+                                <i class="fas fa-tag" style="margin-right: 8px;"></i>
+                                标签 "${tag}" 的所有思维模型 (${results.models.length})
+                            </div>
+                        </div>
+                    `;
+                    
+                    results.models.forEach(model => {
+                        html += `
+                            <div class="mobile-card" onclick="MobileUI.showModelDetail('${model.id}')">
+                                <div class="mobile-card-title">
+                                    <span class="model-id-link">${model.id}</span>: ${model.name}
+                                </div>
+                                <div class="mobile-card-content">
+                                    ${this.truncateText(model.description, 120)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('content').innerHTML = html;
+                }
+            },
+            
+            // 在标签结果中搜索
+            searchInTagResults: function(tag, query, type) {
+                const results = this.dataManager.filterByTag(tag);
+                let filtered = [];
+                
+                if (type === 'thoughts') {
+                    filtered = results.thoughts.filter(thought => {
+                        return (
+                            (thought.title && thought.title.toLowerCase().includes(query.toLowerCase())) ||
+                            (thought.id && thought.id.toLowerCase().includes(query.toLowerCase())) ||
+                            (thought.tags && thought.tags.some(t => t.toLowerCase().includes(query.toLowerCase())))
+                        );
+                    });
+                    
+                    // 更新显示
+                    const cards = document.querySelectorAll('.mobile-card');
+                    cards.forEach((card, index) => {
+                        if (index === 0) return; // 跳过标题卡片
+                        
+                        const thoughtId = card.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                        const thought = results.thoughts.find(t => t.id === thoughtId);
+                        
+                        if (thought && filtered.find(t => t.id === thoughtId)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // 更新标题
+                    if (cards[0]) {
+                        cards[0].querySelector('.mobile-card-title').innerHTML = `
+                            <i class="fas fa-tag" style="margin-right: 8px;"></i>
+                            标签 "${tag}" 的思考记录 (${filtered.length}/${results.thoughts.length})
+                        `;
+                    }
+                }
+            },
+            
+            // 渲染分页
+            renderPagination: function(totalPages) {
+                let html = '<div class="mobile-pagination">';
+                
+                // 上一页按钮
+                html += `
+                    <button class="mobile-page-btn ${this.currentPage === 1 ? 'disabled' : ''}" 
+                            onclick="MobileUI.changePage(${this.currentPage - 1})" 
+                            ${this.currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                `;
+                
+                // 页码按钮
+                const maxVisible = 5;
+                let startPage = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                
+                if (endPage - startPage + 1 < maxVisible) {
+                    startPage = Math.max(1, endPage - maxVisible + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `
+                        <button class="mobile-page-btn ${this.currentPage === i ? 'active' : ''}" 
+                                onclick="MobileUI.changePage(${i})">
+                            ${i}
+                        </button>
+                    `;
+                }
+                
+                // 下一页按钮
+                html += `
+                    <button class="mobile-page-btn ${this.currentPage === totalPages ? 'disabled' : ''}" 
+                            onclick="MobileUI.changePage(${this.currentPage + 1})" 
+                            ${this.currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+                
+                html += '</div>';
+                return html;
+            },
+            
+            // 改变页码
+            changePage: function(page) {
+                if (page < 1 || page > Math.ceil(
+                    this.currentView === 'thoughts' ? 
+                    this.dataManager.thoughts.length / this.itemsPerPage : 
+                    this.dataManager.models.length / this.itemsPerPage
+                )) {
+                    return;
+                }
+                
+                this.currentPage = page;
+                this.renderView(this.currentView);
+                
+                // 滚动到顶部
+                document.getElementById('content').scrollIntoView({ behavior: 'smooth' });
+            },
+            
+            // 同步数据
+            syncData: function() {
+                document.getElementById('sync-btn').innerHTML = '<i class="fas fa-sync-alt sync-pulse"></i>';
+                document.getElementById('sync-btn').title = '同步中...';
+                
+                setTimeout(() => {
+                    this.dataManager.syncData();
+                    document.getElementById('sync-btn').innerHTML = '<i class="fas fa-check-circle"></i>';
+                    document.getElementById('sync-btn').title = '同步完成';
+                    
+                    setTimeout(() => {
+                        document.getElementById('sync-btn').innerHTML = '<i class="fas fa-sync-alt"></i>';
+                        document.getElementById('sync-btn').title = '同步数据';
+                    }, 2000);
+                }, 1000);
+            },
+            
+            // 导出所有数据
+            exportAllData: function() {
+                const data = this.dataManager.exportAllData();
+                if (!data) {
+                    this.showNotification('导出失败', 'error');
+                    return;
+                }
+                
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `思维协同处理器_移动端备份_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showNotification('数据导出成功', 'success');
+                this.closeModal();
+            },
+            
+            // 导入数据
+            importData: function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const result = this.dataManager.importData(event.target.result);
+                        if (result.success) {
+                            this.renderView(this.currentView);
+                            this.updateStats();
+                            this.updateCommonTags();
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+                this.closeModal();
+            },
+            
+            // 清除数据
+            clearData: function() {
+                if (this.dataManager.clearData()) {
+                    this.renderView('overview');
+                    this.updateStats();
+                    this.updateCommonTags();
+                    this.closeModal();
+                }
+            },
+            
+            // 更新统计数据
+            updateStats: function() {
+                document.getElementById('sidebar-thought-count').textContent = this.dataManager.thoughts.length;
+                document.getElementById('sidebar-model-count').textContent = this.dataManager.models.length;
+                document.getElementById('sidebar-tag-count').textContent = Object.keys(this.dataManager.tags).length;
+                document.getElementById('sidebar-version').textContent = this.dataManager.currentVersion;
+                
+                // 更新最后同步时间
+                if (this.dataManager.lastSaved) {
+                    const savedTime = new Date(this.dataManager.lastSaved);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - savedTime) / (1000 * 60));
+                    
+                    let timeText = "刚刚";
+                    if (diffMinutes >= 60) {
+                        const diffHours = Math.floor(diffMinutes / 60);
+                        timeText = `${diffHours}小时前`;
+                    } else if (diffMinutes > 0) {
+                        timeText = `${diffMinutes}分钟前`;
+                    }
+                    
+                    document.getElementById('last-sync-time').textContent = timeText;
+                }
+                
+                // 更新数据状态
+                const dataStatus = document.getElementById('data-status');
+                if (this.dataManager.thoughts.length > 0 || this.dataManager.models.length > 0) {
+                    dataStatus.textContent = '正常';
+                    dataStatus.style.color = 'var(--success-color)';
+                } else {
+                    dataStatus.textContent = '空';
+                    dataStatus.style.color = 'var(--warning-color)';
+                }
+            },
+            
+            // 更新热门标签
+            updateCommonTags: function() {
+                const tags = this.dataManager.getTopTags(12);
+                const container = document.getElementById('common-tags');
+                
+                if (tags.length > 0) {
+                    let html = '';
+                    tags.forEach(({ tag, count }) => {
+                        html += `<span class="mobile-tag clickable" onclick="MobileUI.filterByTag('${tag}')">${tag} (${count})</span>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<span style="color: var(--text-light); font-size: 14px;">暂无标签</span>';
+                }
+            },
+            
+            // 显示通知
+            showNotification: function(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}" 
+                       style="color: ${type === 'success' ? 'var(--success-color)' : type === 'error' ? 'var(--danger-color)' : type === 'warning' ? 'var(--warning-color)' : 'var(--accent-color)'};">
+                    </i>
+                    <span>${message}</span>
+                `;
+                
+                notification.className = `mobile-notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            },
+            
+            // 截断文本
+            truncateText: function(text, maxLength) {
+                if (!text) return '';
+                if (text.length <= maxLength) return text;
+                return text.substring(0, maxLength) + '...';
             }
         };
         
-        // ==================== 同步功能 ====================
-        function syncWithPC() {
-            // 重新加载数据
-            MobileDataManager.loadData();
-            MobileDataManager.updateStats();
-            MobileDataManager.updateCommonTags();
-            
-            // 重新渲染当前视图
-            MobileDataManager.renderCurrentView();
-            
-            // 显示同步成功消息
-            alert('数据已同步！\n思考记录: ' + MobileDataManager.thoughts.length + 
-                  '\n思维模型: ' + MobileDataManager.models.length);
-        }
-        
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', function() {
+            // 检测是否为移动设备
+            const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const screenWidth = window.innerWidth;
+            
+            // 如果是大屏设备且不是从电脑端重定向过来的，提示使用电脑端
+            if (!isMobile && screenWidth > 768 && !window.location.href.includes('mobile')) {
+                if (confirm('检测到您在大屏设备上访问，是否切换到电脑端完整界面？')) {
+                    window.location.href = 'v16.html';
+                    return;
+                }
+            }
+            
+            // 初始化移动端UI
             MobileUI.init();
             
-            // 设置返回按钮处理（浏览器返回）
-            window.addEventListener('popstate', function() {
-                if (MobileUI.currentDetail) {
-                    MobileUI.currentDetail = null;
-                    MobileUI.currentDetailId = null;
-                    MobileDataManager.renderCurrentView();
+            // 处理URL哈希
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                if (hash.startsWith('thought/')) {
+                    const thoughtId = hash.replace('thought/', '');
+                    MobileUI.showThoughtDetail(thoughtId);
+                } else if (hash.startsWith('model/')) {
+                    const modelId = hash.replace('model/', '');
+                    MobileUI.showModelDetail(modelId);
+                } else if (['overview', 'thoughts', 'models', 'search', 'tags'].includes(hash)) {
+                    MobileUI.navigateTo(hash);
+                }
+            }
+            
+            // 监听返回按钮
+            window.addEventListener('popstate', function(event) {
+                if (event.state && event.state.view) {
+                    MobileUI.navigateTo(event.state.view);
+                } else if (event.state && event.state.detail) {
+                    if (event.state.detail === 'thought') {
+                        MobileUI.showThoughtDetail(event.state.id);
+                    } else if (event.state.detail === 'model') {
+                        MobileUI.showModelDetail(event.state.id);
+                    }
                 }
             });
-            
-            // 设置触摸滑动关闭侧边栏
-            let touchStartX = 0;
-            let touchStartY = 0;
-            
-            document.addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-            });
-            
-            document.addEventListener('touchmove', function(e) {
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-                
-                // 向右滑动关闭侧边栏
-                if (touchX - touchStartX > 50 && Math.abs(touchY - touchStartY) < 30) {
-                    MobileDataManager.closeSidebar();
-                }
-            });
-        });
-        
-        // ==================== 离线支持 ====================
-        // 检查网络状态
-        window.addEventListener('online', function() {
-            console.log('网络已连接');
-        });
-        
-        window.addEventListener('offline', function() {
-            console.log('网络已断开，使用本地数据');
         });
     </script>
 </body>
