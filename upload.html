@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>数据上传工具</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; }
+        .btn { background: #1a237e; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📤 数据上传工具</h2>
+        <p>将电脑端数据导出并上传到 GitHub 仓库</p>
+        
+        <div style="margin: 20px 0;">
+            <button class="btn" onclick="exportData()">1. 从电脑端导出数据</button>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                先打开电脑端页面 (v16.html)，点击"导出为 JSON 文件"按钮
+            </p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h3>2. 上传到 GitHub</h3>
+            <p>手动将导出的 <code>thought-processor-data.json</code> 文件上传到：</p>
+            <div style="background: white; padding: 10px; border-radius: 5px; font-family: monospace;">
+                https://github.com/YOUR_USERNAME/YOUR_REPO
+            </div>
+            <p style="margin-top: 10px;">上传到仓库根目录或与 HTML 文件同一目录</p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h3>3. 访问移动端</h3>
+            <p>移动端访问地址：</p>
+            <div style="background: white; padding: 10px; border-radius: 5px; font-family: monospace;">
+                https://YOUR_USERNAME.github.io/YOUR_REPO/v16-mobile-simple.html
+            </div>
+            <p style="margin-top: 10px;">移动端会自动加载 <code>thought-processor-data.json</code> 文件</p>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p><strong>自动检测更新：</strong>移动端每次打开都会重新加载 JSON 文件</p>
+            <p><strong>离线使用：</strong>移动端会将数据缓存到本地，离线时使用</p>
+            <p><strong>链接跳转：</strong>支持 #123 和 M-80 链接点击跳转</p>
+        </div>
+    </div>
+</body>
+</html>
