@@ -1049,14 +1049,14 @@
                 return this;
             },
             
-            // 加载完整数据（与电脑端完全一致）
+            // 加载完整数据
             loadFullData: function() {
                 try {
                     const saved = localStorage.getItem(this.STORAGE_KEY);
                     if (saved) {
                         const data = JSON.parse(saved);
                         
-                        // 确保所有字段都有值（与电脑端一致）
+                        // 确保所有字段都有值
                         this.thoughts = data.thoughts || [];
                         this.models = data.models || [];
                         this.tags = data.tags || {};
@@ -1067,7 +1067,7 @@
                         this.nextThoughtId = data.nextThoughtId || 124;
                         this.nextModelId = data.nextModelId || 81;
                         
-                        console.log('移动端完整数据加载成功');
+                        console.log('数据加载成功');
                         this.showNotification('数据加载成功', 'success');
                         return true;
                     } else {
@@ -1090,11 +1090,29 @@
                 }
             },
             
-            // 保存完整数据（与电脑端完全一致）- 在移动端禁用
+            // 保存完整数据
             saveFullData: function() {
-                console.warn('移动端禁止保存数据，请在电脑端编辑');
-                this.showNotification('移动端为查看模式，请在电脑端编辑保存数据', 'warning');
-                return false;
+                try {
+                    const data = {
+                        thoughts: this.thoughts,
+                        models: this.models,
+                        tags: this.tags,
+                        timeline: this.timeline,
+                        modelConnections: this.modelConnections,
+                        currentVersion: this.currentVersion,
+                        lastSaved: new Date().toISOString(),
+                        nextThoughtId: this.nextThoughtId,
+                        nextModelId: this.nextModelId
+                    };
+                    
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+                    this.lastSaved = data.lastSaved;
+                    console.log('数据已保存');
+                    return true;
+                } catch (error) {
+                    console.error('保存数据失败:', error);
+                    return false;
+                }
             },
             
             // 获取思考记录
@@ -1243,11 +1261,16 @@
                     this.nextThoughtId = imported.nextThoughtId || this.nextThoughtId;
                     this.nextModelId = imported.nextModelId || this.nextModelId;
                     
-                    // 保存到本地存储（在移动端会被阻止）
-                    this.saveFullData();
+                    // 保存到本地存储
+                    const saveResult = this.saveFullData();
                     
-                    this.showNotification('数据导入成功', 'success');
-                    return { success: true, message: '数据导入成功' };
+                    if (saveResult) {
+                        this.showNotification('数据导入成功', 'success');
+                        return { success: true, message: '数据导入成功' };
+                    } else {
+                        this.showNotification('数据导入失败，无法保存', 'error');
+                        return { success: false, error: '无法保存到本地存储' };
+                    }
                 } catch (error) {
                     console.error('导入数据失败:', error);
                     this.showNotification('导入失败: ' + error.message, 'error');
@@ -1319,6 +1342,15 @@
             clearData: function() {
                 if (confirm('确定要清除所有本地数据吗？此操作不可撤销。')) {
                     localStorage.removeItem(this.STORAGE_KEY);
+                    
+                    // 清除所有备份
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith(this.BACKUP_PREFIX)) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
                     this.thoughts = [];
                     this.models = [];
                     this.tags = {};
