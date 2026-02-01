@@ -1459,25 +1459,6 @@
             resize: vertical;
         }
     </style>
-    <!-- 添加在v16.html的head部分，大约在第10-20行之间 -->
-    <script src="data-manager.js"></script>
-    <!-- 添加在head部分 -->
-    <script>
-        // 移动端检测和重定向
-        (function() {
-            const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isTablet = /iPad|Android|Tablet/i.test(navigator.userAgent);
-            const screenWidth = window.innerWidth;
-            
-            // 如果是移动设备且屏幕宽度小于768px，且不是从移动端页面访问
-            if ((isMobile || screenWidth < 768) && !window.location.href.includes('mobile')) {
-                // 询问用户是否切换到移动端界面
-                if (confirm('检测到您在移动设备上访问，是否切换到移动端优化界面？')) {
-                    window.location.href = 'v16-mobile.html';
-                }
-            }
-        })();
-    </script>
 </head>
 <body>
     <!-- 顶部状态栏 -->
@@ -1776,156 +1757,231 @@
 
     <script>
         // ==================== 数据结构与存储 ====================
-    init: function() {
-        // 检查是否可以使用统一数据管理器
-        if (typeof UnifiedDataManager !== 'undefined') {
-            try {
-                // 使用统一数据管理器获取数据
-                const fullData = UnifiedDataManager.getFullData();
-                
-                // 加载数据到DataStore
-                this.thoughts = fullData.thoughts || [];
-                this.models = fullData.models || [];
-                this.tags = fullData.tags || {};
-                this.nextThoughtId = fullData.nextThoughtId || 124;
-                this.nextModelId = fullData.nextModelId || 81;
-                this.currentVersion = fullData.currentVersion || "v22.48";
-                this.lastSaved = fullData.lastSaved || new Date().toISOString();
-                this.timeline = fullData.timeline || this.timeline;
-                this.modelConnections = fullData.modelConnections || this.modelConnections;
-                
-                // 检查是否需要创建示例数据（首次使用）
-                if (this.thoughts.length === 0 && this.models.length === 0) {
-                    console.log('首次使用，创建示例数据...');
-                    this.addExampleData();
-                    
-                    // 保存示例数据到统一管理器
-                    this.saveToUnifiedManager();
+        const DataStore = {
+            thoughts: [],
+            models: [],
+            tags: {},
+            nextThoughtId: 124,
+            nextModelId: 81,
+            currentVersion: "v22.48",
+            lastSaved: null,
+            // 标签分类系统
+            tagCategories: {
+                "核心模型": ["🧠 核心模型", "🌌 哲学/存在智慧", "🔄 系统/模型整合", "⚙️ 决策/行动", "🎭 荒诞/幽默"],
+                "关系与情感": ["💞 亲密关系/情感", "💔 失去/告别", "⚖️ 期望/错位", "🌱 成长/历程", "😶 道德/伦理"],
+                "时间与存在": ["⏳ 时间/宿命", "⏰ 记忆/遗忘", "🌍 存在/感知", "🌀 循环/重复", "🚶 历程/路径"],
+                "艺术与表达": ["🎵 歌曲分析", "🎭 文艺批评", "🎨 艺术/象征", "🗣️ 语言/叙事", "📚 文本分析"],
+                "社会与系统": ["⚔️ 反抗/边缘", "🔄 系统/结构", "🏛️ 制度/权力", "🌐 网络/连接", "⚖️ 伦理/责任"],
+                "特殊状态": ["🔥 极端体验", "🌀 解构/重构", "🎯 聚焦/专注", "💡 灵感/洞见", "🛡️ 防御/保护"]
+            },
+            
+            // 模型关联网络
+            modelConnections: {
+                "M-80": ["M-74", "M-78", "M-69", "M-77", "M-67"],
+                "M-79": ["M-77", "M-71", "M-67"],
+                "M-78": ["M-74", "M-73", "M-77", "M-76"],
+                "M-77": ["M-69", "M-71", "M-67", "M-76"],
+                "M-76": ["M-60", "M-71", "M-62", "M-66", "M-74"],
+                "M-75": ["M-73", "M-72", "M-94"],
+                "M-74": ["M-69", "M-30", "M-66", "M-67"],
+                "M-73": ["M-94", "M-70", "M-72", "M-68"]
+            },
+            
+            // 定义关键标题的多种可能形式
+            sectionTitles: {
+                "状态看板": [
+                    "💎 **状态看板**", "💎 状态看板", "状态看板:", "状态看板", "状态", "看板",
+                    "💡 **状态看板**", "📊 **状态看板**", "📋 **状态看板**", "系统状态", "思考状态"
+                ],
+                "核心结论": [
+                    "🌌 **核心结论**", "🌌 核心结论", "核心结论:", "核心结论", "结论", "核心观点",
+                    "🎯 **核心结论**", "✨ **核心结论**", "💡 **核心结论**", "主要结论", "核心发现"
+                ],
+                "模型延伸与整合": [
+                    "🧩 **模型延伸与整合**", "🧩 模型延伸与整合", "模型延伸与整合:", "模型延伸", "模型整合",
+                    "模型延伸与整合", "模型扩展", "整合模型", "🔗 **模型延伸与整合**", "模型关联"
+                ],
+                "行动/思维要点": [
+                    "📚 **行动/思维要点**", "📚 行动/思维要点", "行动/思维要点:", "行动思维要点",
+                    "行动要点", "思维要点", "要点", "行动建议", "思维建议", "🎯 **行动/思维要点**"
+                ],
+                "架构更新": [
+                    "📂 **架构更新**", "📂 架构更新", "架构更新:", "架构更新", "系统更新",
+                    "更新日志", "版本更新", "📈 **架构更新**", "🔄 **架构更新**"
+                ]
+            },
+            
+            // 系统演进里程碑数据
+            timeline: [
+                {id: "t1", version: "v1.0-v5.0", date: "2023-01", event: "基础情感模型建立（工具化、错位、遗憾）"},
+                {id: "t2", version: "v6.0-v10.0", date: "2023-03", event: "关系模型深化（成熟馈赠、无限博弈）"},
+                {id: "t3", version: "v11.0-v15.0", date: "2023-05", event: "存在哲学拓展（存在勘探、水性智慧）"},
+                {id: "t4", version: "v16.0-v18.0", date: "2023-07", event: "防御机制与病理学完善（梦境寄生、情感麻痹）"},
+                {id: "t5", version: "v18.0-v20.2", date: "2023-09", event: "关系动力学、健康共建、意义整合"},
+                {id: "t6", version: "v20.3-v21.3", date: "2023-11", event: "宏观社会批判、个体生存策略、哲学框架普适化"},
+                {id: "t7", version: "v21.4-v22.0", date: "2024-01", event: "亲密关系光谱、存在性寄生、熵增损耗、祛魅悬置、偶像幻灭、创伤后重建、虚无美学整合"},
+                {id: "t8", version: "v22.1-v22.2", date: "2024-03", event: "双轨制架构建立，新增 M-45 至 M-53 模型"},
+                {id: "t9", version: "v22.33", date: "2024-05", event: "《我们很好》×《快乐星猫》关系诊疗整合版"},
+                {id: "t10", version: "v22.48", date: "2024-07", event: "《寄居》×《花》整合版，模型总数达80个"}
+            ],
+            
+            // 当前正在编辑的时间线项目ID
+            editingTimelineId: null,
+            
+            // 初始版本数据存储
+            initialData: null,
+            
+            init: function() {
+                // 检查是否可以使用统一数据管理器
+                if (typeof UnifiedDataManager !== 'undefined') {
+                    try {
+                        // 使用统一数据管理器获取数据
+                        const fullData = UnifiedDataManager.getFullData();
+                        
+                        // 加载数据到DataStore
+                        this.thoughts = fullData.thoughts || [];
+                        this.models = fullData.models || [];
+                        this.tags = fullData.tags || {};
+                        this.nextThoughtId = fullData.nextThoughtId || 124;
+                        this.nextModelId = fullData.nextModelId || 81;
+                        this.currentVersion = fullData.currentVersion || "v22.48";
+                        this.lastSaved = fullData.lastSaved || new Date().toISOString();
+                        this.timeline = fullData.timeline || this.timeline;
+                        this.modelConnections = fullData.modelConnections || this.modelConnections;
+                        
+                        // 检查是否需要创建示例数据（首次使用）
+                        if (this.thoughts.length === 0 && this.models.length === 0) {
+                            console.log('首次使用，创建示例数据...');
+                            this.addExampleData();
+                            
+                            // 保存示例数据到统一管理器
+                            this.saveToUnifiedManager();
+                        } else {
+                            // 保存初始版本数据
+                            this.saveInitialData();
+                            console.log('数据加载成功');
+                        }
+                        
+                        // 设置跨页面数据同步监听
+                        this.setupDataSyncListener();
+                        
+                    } catch (e) {
+                        console.log('使用统一数据管理器失败，回退到本地存储', e);
+                        this.loadFromLocalStorage();
+                    }
                 } else {
-                    // 保存初始版本数据
-                    this.saveInitialData();
-                    console.log('数据加载成功');
+                    // 如果没有统一数据管理器，使用原来的本地存储方式
+                    this.loadFromLocalStorage();
                 }
                 
-                // 设置跨页面数据同步监听
-                this.setupDataSyncListener();
-                
-            } catch (e) {
-                console.log('使用统一数据管理器失败，回退到本地存储', e);
-                this.loadFromLocalStorage();
-            }
-        } else {
-            // 如果没有统一数据管理器，使用原来的本地存储方式
-            this.loadFromLocalStorage();
-        }
-        
-        // 初始化UI统计
-        this.updateUIStats();
-    },
-    
-    // 新增：从本地存储加载数据（原来的逻辑）
-    loadFromLocalStorage: function() {
-        const saved = localStorage.getItem('structuredThoughtAssistant');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                this.thoughts = data.thoughts || [];
-                this.models = data.models || [];
-                this.tags = data.tags || {};
-                this.nextThoughtId = data.nextThoughtId || 124;
-                this.nextModelId = data.nextModelId || 81;
-                this.currentVersion = data.currentVersion || "v22.48";
-                this.lastSaved = data.lastSaved || new Date().toISOString();
-                this.timeline = data.timeline || this.timeline;
-                this.modelConnections = data.modelConnections || this.modelConnections;
-                
-                // 保存初始版本数据
-                this.saveInitialData();
-                console.log('从本地存储加载数据成功');
-            } catch (e) {
-                console.log('解析失败，使用默认数据', e);
-                this.addExampleData();
-            }
-        } else {
-            this.addExampleData();
-        }
-    },
-    
-    // 新增：保存数据到统一管理器
-    saveToUnifiedManager: function() {
-        if (typeof UnifiedDataManager !== 'undefined') {
-            try {
+                // 初始化UI统计
+                this.updateUIStats();
+            },
+            
+            // 新增：从本地存储加载数据（原来的逻辑）
+            loadFromLocalStorage: function() {
+                const saved = localStorage.getItem('structuredThoughtAssistant');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        this.thoughts = data.thoughts || [];
+                        this.models = data.models || [];
+                        this.tags = data.tags || {};
+                        this.nextThoughtId = data.nextThoughtId || 124;
+                        this.nextModelId = data.nextModelId || 81;
+                        this.currentVersion = data.currentVersion || "v22.48";
+                        this.lastSaved = data.lastSaved || new Date().toISOString();
+                        this.timeline = data.timeline || this.timeline;
+                        this.modelConnections = data.modelConnections || this.modelConnections;
+                        
+                        // 保存初始版本数据
+                        this.saveInitialData();
+                        console.log('从本地存储加载数据成功');
+                    } catch (e) {
+                        console.log('解析失败，使用默认数据', e);
+                        this.addExampleData();
+                    }
+                } else {
+                    this.addExampleData();
+                }
+            },
+            
+            // 新增：保存数据到统一管理器
+            saveToUnifiedManager: function() {
+                if (typeof UnifiedDataManager !== 'undefined') {
+                    try {
+                        const data = {
+                            thoughts: this.thoughts,
+                            models: this.models,
+                            tags: this.tags,
+                            timeline: this.timeline,
+                            modelConnections: this.modelConnections,
+                            currentVersion: this.currentVersion,
+                            lastSaved: new Date().toISOString(),
+                            nextThoughtId: this.nextThoughtId,
+                            nextModelId: this.nextModelId
+                        };
+                        
+                        UnifiedDataManager.saveData(data);
+                        console.log('数据已保存到统一管理器');
+                    } catch (e) {
+                        console.error('保存到统一管理器失败:', e);
+                        // 回退到原来的保存方式
+                        this.saveToLocalStorage();
+                    }
+                } else {
+                    this.saveToLocalStorage();
+                }
+            },
+            
+            // 新增：保存数据到本地存储（原来的逻辑）
+            saveToLocalStorage: function() {
                 const data = {
                     thoughts: this.thoughts,
                     models: this.models,
                     tags: this.tags,
-                    timeline: this.timeline,
-                    modelConnections: this.modelConnections,
+                    nextThoughtId: this.nextThoughtId,
+                    nextModelId: this.nextModelId,
                     currentVersion: this.currentVersion,
                     lastSaved: new Date().toISOString(),
-                    nextThoughtId: this.nextThoughtId,
-                    nextModelId: this.nextModelId
+                    timeline: this.timeline,
+                    modelConnections: this.modelConnections
                 };
                 
-                UnifiedDataManager.saveData(data);
-                console.log('数据已保存到统一管理器');
-            } catch (e) {
-                console.error('保存到统一管理器失败:', e);
-                // 回退到原来的保存方式
-                this.saveToLocalStorage();
-            }
-        } else {
-            this.saveToLocalStorage();
-        }
-    },
-    
-    // 新增：保存数据到本地存储（原来的逻辑）
-    saveToLocalStorage: function() {
-        const data = {
-            thoughts: this.thoughts,
-            models: this.models,
-            tags: this.tags,
-            nextThoughtId: this.nextThoughtId,
-            nextModelId: this.nextModelId,
-            currentVersion: this.currentVersion,
-            lastSaved: new Date().toISOString(),
-            timeline: this.timeline,
-            modelConnections: this.modelConnections
-        };
-        
-        try {
-            localStorage.setItem('structuredThoughtAssistant', JSON.stringify(data));
-            this.lastSaved = data.lastSaved;
-            console.log('数据保存到本地存储成功');
-            return true;
-        } catch (e) {
-            console.error('保存数据失败:', e);
-            return false;
-        }
-    },
-    
-    // 新增：设置数据同步监听
-    setupDataSyncListener: function() {
-        // 监听storage事件（同一浏览器不同标签页）
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'structuredThoughtAssistant' && e.newValue) {
-                console.log('检测到其他标签页的数据变化');
-                // 重新加载数据
-                setTimeout(() => {
-                    location.reload();
-                }, 500);
-            }
-        });
-        
-        // 监听自定义数据更新事件
-        window.addEventListener('data-updated', () => {
-            console.log('数据已更新，重新加载数据...');
-            // 重新加载数据
-            setTimeout(() => {
-                location.reload();
-            }, 500);
-        });
-         
+                try {
+                    localStorage.setItem('structuredThoughtAssistant', JSON.stringify(data));
+                    this.lastSaved = data.lastSaved;
+                    console.log('数据保存到本地存储成功');
+                    return true;
+                } catch (e) {
+                    console.error('保存数据失败:', e);
+                    return false;
+                }
+            },
+            
+            // 新增：设置数据同步监听
+            setupDataSyncListener: function() {
+                // 监听storage事件（同一浏览器不同标签页）
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'structuredThoughtAssistant' && e.newValue) {
+                        console.log('检测到其他标签页的数据变化');
+                        // 重新加载数据
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+                });
+                
+                // 监听自定义数据更新事件
+                window.addEventListener('data-updated', () => {
+                    console.log('数据已更新，重新加载数据...');
+                    // 重新加载数据
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                });
+            },
+            
             // 保存初始版本数据
             saveInitialData: function() {
                 if (!this.initialData) {
