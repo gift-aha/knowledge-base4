@@ -1625,6 +1625,10 @@
                     <button class="data-btn backup" id="export-all-btn">
                         <i class="fas fa-download"></i> 导出全部数据
                     </button>
+                    <!-- 新增：导出JSON文件按钮 -->
+                    <button class="data-btn export" onclick="exportDataToFile()">
+                        <i class="fas fa-file-export"></i> 导出为 JSON 文件
+                    </button>
                 </div>
             </div>
             
@@ -2308,6 +2312,43 @@
                 };
                 
                 return JSON.stringify(data, null, 2);
+            },
+            
+            // ==================== 新增：导出数据到JSON文件 ====================
+            exportToJSON: function() {
+                const data = {
+                    thoughts: this.thoughts,
+                    models: this.models,
+                    tags: this.tags,
+                    timeline: this.timeline,
+                    modelConnections: this.modelConnections,
+                    currentVersion: this.currentVersion,
+                    lastSaved: new Date().toISOString(),
+                    nextThoughtId: this.nextThoughtId,
+                    nextModelId: this.nextModelId,
+                    exportDate: new Date().toISOString()
+                };
+                
+                return JSON.stringify(data, null, 2);
+            },
+            
+            // 保存到文件
+            saveToJSONFile: function() {
+                const json = this.exportToJSON();
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'thought-processor-data.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // 同时保存到 localStorage（备份）
+                localStorage.setItem('structuredThoughtAssistant', json);
+                
+                return 'thought-processor-data.json';
             },
             
             exportCurrentItem: function(type, id) {
@@ -5384,6 +5425,12 @@
         
         function applyTagReview() {
             UIManager.applyTagReview();
+        }
+        
+        // ==================== 新增：导出JSON文件函数 ====================
+        function exportDataToFile() {
+            const filename = DataStore.saveToJSONFile();
+            alert(`数据已导出到文件: ${filename}\n请将此文件上传到 GitHub 仓库的同一目录。`);
         }
         
         // ==================== 新增：分段编辑相关函数 ====================
