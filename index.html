@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>思维协同处理器 - 智能解析增强版</title>
+    
+    <!-- 元数据 -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="description" content="思维协同处理器 - 个人知识管理与思维模型构建工具，帮助你结构化思考、管理认知模型、建立个人知识体系">
+    <meta name="keywords" content="知识管理,思维模型,认知工具,个人成长,思维训练">
+    <meta name="author" content="Aha">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <!-- 在原有CSS之后添加 -->
+    <link rel="stylesheet" href="layout-fix.css">
+    <!-- 在所有CSS文件之后添加 -->
+    <link rel="stylesheet" href="flex-fix.css" id="flex-fix-css">
+    
+    <style>
+        /* 临时样式用于调试 */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 9999;
+            font-size: 12px;
+            max-width: 300px;
+            display: none;
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .error-state h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        
+        .error-state ol {
+            text-align: left;
+            max-width: 400px;
+            margin: 20px auto;
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .error-state li {
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            padding: 10px 20px;
+            background: #5c6bc0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: #3f51b5;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #5c6bc0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 确保body和内容可见 */
+        body {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* 内容区域默认隐藏，初始化后显示 */
+        #content-area {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* 初始化完成后显示的类 */
+        .app-initialized #page-skeleton {
+            display: none !important;
+        }
+        
+        .app-initialized #content-area {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 调试信息 -->
+    <div class="debug-info" id="debug-info"></div>
+    
+    <!-- 页面骨架（避免页面空白） -->
+    <div id="page-skeleton">
+        <!-- 桌面端顶部栏 -->
+        <div class="top-bar desktop-only">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">思维协同处理器</div>
+            </div>
+            <div class="system-info">
+                <span>当前版本: <strong id="current-version">v22.48</strong></span>
+                <span style="margin: 0 5px;">|</span>
+                <span>模型总数: <strong id="total-models">0</strong></span>
+                <span style="margin: 0 5px;">|</span>
+                <span>思考记录: <strong id="total-thoughts">0</strong></span>
+                <span style="margin: 0 5px;">|</span>
+                <span>标签数: <strong id="total-tags">0</strong></span>
+            </div>
+            <div class="sync-controls">
+                <button class="sync-btn" id="sync-btn" title="同步数据" disabled>
+                    <i class="fas fa-sync-alt"></i> 同步
+                </button>
+                <button class="sync-btn" id="export-btn" title="导出数据" disabled>
+                    <i class="fas fa-download"></i> 导出
+                </button>
+                <button class="sync-btn" id="github-export-btn-top" title="导出到GitHub文件" disabled>
+                    <i class="fas fa-cloud-upload-alt"></i> GitHub
+                </button>
+            </div>
+            <div class="current-view" id="current-view">正在加载...</div>
+        </div>
+        
+        <!-- 主容器 -->
+        <div class="main-container">
+            <!-- 左侧导航栏 -->
+            <div class="sidebar">
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #666;">加载中...</p>
+                </div>
+            </div>
+            
+            <!-- 主内容区 -->
+            <div class="content-area" id="content-area">
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #666;">正在初始化应用...</p>
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="right-panel">
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误状态容器（默认隐藏） -->
+    <div id="error-container" style="display: none;">
+        <div class="error-state">
+            <h2>系统初始化失败</h2>
+            <p style="color:#666; margin:15px 0;">无法加载应用程序，请检查：</p>
+            <ol>
+                <li>网络连接是否正常</li>
+                <li>浏览器是否支持JavaScript</li>
+                <li>尝试刷新页面或清除缓存</li>
+                <li>检查浏览器控制台是否有错误信息</li>
+            </ol>
+            <div style="margin-top:30px;">
+                <button onclick="location.reload()" class="btn-primary" style="margin-right: 10px;">
+                    <i class="fas fa-redo"></i> 刷新页面
+                </button>
+                <button onclick="showDebugInfo()" class="btn-primary" style="background: #6c757d;">
+                    <i class="fas fa-bug"></i> 显示调试信息
+                </button>
+            </div>
+            <div id="detailed-error" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; display: none;">
+                <pre id="error-details" style="text-align: left; font-size: 12px;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 调试按钮 -->
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 10000;">
+        <button onclick="manualDebug()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">
+            调试
+        </button>
+    </div>
+
+    <!-- JavaScript 文件 -->
+    <!-- 使用defer属性确保按顺序执行且不阻塞渲染 -->
+    <script src="script.js" defer onerror="handleScriptError('script.js')"></script>
+    <script src="data-sync.js" defer onerror="handleScriptError('data-sync.js')"></script>
+    <script src="mobile-config.js" defer onerror="handleScriptError('mobile-config.js')"></script>
+    <script src="mobile.js" defer onerror="handleScriptError('mobile.js')"></script>
+    
+    <script>
+        // 全局应用状态
+        const AppState = {
+            initialized: false,
+            scriptsLoaded: 0,
+            totalScripts: 4,
+            errors: []
+        };
+        
+        // 脚本错误处理
+        function handleScriptError(scriptName) {
+            const error = `脚本加载失败: ${scriptName}`;
+            console.error(error);
+            AppState.errors.push(error);
+            updateLoadingProgress();
+        }
+        
+        // 更新加载进度
+        function updateLoadingProgress() {
+            AppState.scriptsLoaded++;
+            
+            // 如果所有脚本都尝试加载完成（无论成功与否）
+            if (AppState.scriptsLoaded >= AppState.totalScripts) {
+                // 等待一小段时间让脚本执行
+                setTimeout(checkAppInitialization, 100);
+            }
+        }
+        
+        // 检查App是否初始化成功
+        function checkAppInitialization() {
+            // 如果已经有错误，直接显示
+            if (AppState.errors.length > 0) {
+                showErrorState(AppState.errors.join('\n'));
+                return;
+            }
+            
+            // 检查App对象是否存在
+            if (typeof window.App === 'undefined') {
+                showErrorState('App对象未定义。可能的原因：\n1. script.js未正确加载\n2. script.js中有语法错误\n3. App对象在script.js中的名称不一致');
+                return;
+            }
+            
+            // 检查App.init是否存在
+            if (typeof window.App.init !== 'function') {
+                showErrorState('App.init不是一个有效的函数');
+                return;
+            }
+            
+            // 尝试初始化
+            try {
+                console.log('正在初始化应用程序...');
+                window.App.init();
+                AppState.initialized = true;
+                
+                // 注意：这里不再隐藏骨架，由App.init()自己控制
+                console.log('应用程序初始化成功');
+                
+                // 绑定GitHub按钮事件
+                bindGitHubButtons();
+                
+            } catch (error) {
+                showErrorState(`初始化过程中发生错误:\n${error.message}\n${error.stack}`);
+            }
+        }
+        
+        // 显示错误状态
+        function showErrorState(errorDetails) {
+            // 隐藏骨架
+            document.getElementById('page-skeleton').style.display = 'none';
+            
+            // 显示错误容器
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.style.display = 'block';
+            
+            // 设置错误详情
+            document.getElementById('error-details').textContent = errorDetails;
+            
+            // 记录到控制台
+            console.error('应用程序初始化失败:', errorDetails);
+        }
+        
+        // 显示调试信息
+        function showDebugInfo() {
+            const details = document.getElementById('detailed-error');
+            const button = event.target;
+            
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                button.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏调试信息';
+            } else {
+                details.style.display = 'none';
+                button.innerHTML = '<i class="fas fa-bug"></i> 显示调试信息';
+            }
+        }
+        
+        // 绑定GitHub按钮事件
+        function bindGitHubButtons() {
+            // 绑定顶部按钮
+            const topBtn = document.getElementById('github-export-btn-top');
+            if (topBtn && typeof GitHubDataSync !== 'undefined') {
+                topBtn.addEventListener('click', function() {
+                    GitHubDataSync.exportDataForGitHub();
+                });
+                topBtn.disabled = false;
+            }
+            
+            // 绑定右侧面板按钮（需要先确保元素存在）
+            setTimeout(function() {
+                const rightBtn = document.getElementById('github-export-btn-right');
+                if (rightBtn && typeof GitHubDataSync !== 'undefined') {
+                    rightBtn.addEventListener('click', function() {
+                        GitHubDataSync.exportDataForGitHub();
+                    });
+                    rightBtn.disabled = false;
+                }
+                
+                // 启用其他按钮
+                document.getElementById('sync-btn').disabled = false;
+                document.getElementById('export-btn').disabled = false;
+            }, 100);
+        }
+        
+        // 页面加载完成后的处理
+        window.addEventListener('load', function() {
+            console.log('页面加载完成，检查应用状态...');
+            
+            // 如果还没有初始化，并且没有错误，再检查一次
+            if (!AppState.initialized && AppState.errors.length === 0) {
+                setTimeout(checkAppInitialization, 500);
+            }
+        });
+        
+        // 如果30秒后还没有初始化，显示错误
+        setTimeout(function() {
+            if (!AppState.initialized && document.getElementById('error-container').style.display === 'none') {
+                showErrorState('应用程序初始化超时。可能的原因：\n1. 脚本加载时间过长\n2. 存在未捕获的JavaScript错误\n3. 网络连接问题');
+            }
+        }, 30000);
+        
+        // 手动触发脚本加载计数（因为defer脚本不会触发onload）
+        // 我们将依赖setTimeout来检查
+        setTimeout(function() {
+            if (AppState.scriptsLoaded === 0) {
+                // 假设所有脚本都已尝试加载
+                AppState.scriptsLoaded = AppState.totalScripts;
+                checkAppInitialization();
+            }
+        }, 2000);
+
+        function manualDebug() {
+        console.log('=== 手动调试 ===');
+        console.log('1. App对象:', typeof App);
+        console.log('2. DataManager对象:', typeof DataManager);
+        console.log('3. AppState:', AppState);
+        
+        // 检查DOM元素
+        console.log('4. 页面骨架:', document.getElementById('page-skeleton')?.style.display);
+        console.log('5. 内容区域:', document.getElementById('content-area')?.innerHTML?.substring(0, 100));
+        
+        // 强制显示内容
+        const skeleton = document.getElementById('page-skeleton');
+        const content = document.getElementById('content-area');
+        
+        if (skeleton) {
+            skeleton.style.display = 'none';
+            console.log('已隐藏页面骨架');
+        }
+        
+        if (content) {
+            content.style.display = 'block';
+            content.style.opacity = '1';
+            content.style.visibility = 'visible';
+            console.log('已显示内容区域');
+        }
+        
+        // 尝试重新加载视图
+        if (App && App.loadView) {
+            App.loadView('overview');
+            console.log('重新加载了overview视图');
+        }
+    }
+    </script>
+</body>
+</html>
