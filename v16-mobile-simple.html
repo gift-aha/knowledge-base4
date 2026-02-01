@@ -178,6 +178,13 @@
                         this.loadData();
                     }
                 });
+
+                // 页面显示时检查更新
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        this.loadData();
+                    }
+                });
                 
                 // 定时检查
                 setInterval(() => {
