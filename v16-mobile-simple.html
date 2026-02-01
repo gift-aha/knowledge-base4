@@ -1,0 +1,387 @@
+<!-- 文件名：v16-mobile-simple.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维协同处理器 - 移动端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 简化样式，只保留核心 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; padding: 20px; background: #f5f9fc; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { 
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%); 
+            color: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        .stat-card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            background: #1a237e; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 6px; 
+            width: 100%; 
+            margin: 10px 0; 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:hover { background: #283593; }
+        .tab { 
+            display: flex; 
+            border-bottom: 2px solid #e0e0e0; 
+            margin-bottom: 15px; 
+        }
+        .tab button { 
+            flex: 1; 
+            padding: 10px; 
+            border: none; 
+            background: none; 
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab button.active { 
+            border-bottom-color: #1a237e; 
+            color: #1a237e; 
+            font-weight: bold;
+        }
+        .item { 
+            padding: 12px; 
+            border-bottom: 1px solid #eee; 
+            cursor: pointer;
+        }
+        .item:hover { background: #f8f9fa; }
+        .tag { 
+            display: inline-block; 
+            background: #e8edff; 
+            color: #5c6bc0; 
+            padding: 3px 8px; 
+            border-radius: 10px; 
+            font-size: 12px; 
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🧠 思维协同处理器</h2>
+            <button onclick="loadData(true)" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                <i class="fas fa-sync-alt"></i> 同步
+            </button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div style="font-size: 24px; font-weight: bold; color: #1a237e;" id="thought-count">0</div>
+                <div>思考记录</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size: 24px; font-weight: bold; color: #1a237e;" id="model-count">0</div>
+                <div>思维模型</div>
+            </div>
+        </div>
+        
+        <div class="tab">
+            <button class="active" onclick="showTab('thoughts')">思考记录</button>
+            <button onclick="showTab('models')">思维模型</button>
+            <button onclick="showTab('search')">搜索</button>
+        </div>
+        
+        <div id="content">
+            <!-- 内容动态加载 -->
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+                <div style="margin-top: 10px;">加载中...</div>
+            </div>
+        </div>
+        
+        <button class="btn" onclick="loadData(true)">
+            <i class="fas fa-sync-alt"></i> 同步电脑端数据
+        </button>
+    </div>
+
+    <script>
+        // 超简化的移动端数据管理器
+        const App = {
+            currentTab: 'thoughts',
+            data: null,
+            
+            init: function() {
+                this.loadData();
+                this.setupAutoRefresh();
+            },
+            
+            // 直接从 localStorage 读取数据（与电脑端完全一致）
+            loadData: function(force = false) {
+                try {
+                    const saved = localStorage.getItem('structuredThoughtAssistant');
+                    if (!saved) {
+                        this.showMessage('暂无数据，请在电脑端添加内容');
+                        return;
+                    }
+                    
+                    const data = JSON.parse(saved);
+                    this.data = data;
+                    
+                    // 更新统计
+                    document.getElementById('thought-count').textContent = data.thoughts?.length || 0;
+                    document.getElementById('model-count').textContent = data.models?.length || 0;
+                    
+                    // 渲染当前标签页
+                    this.renderCurrentTab();
+                    
+                    if (force) {
+                        this.showMessage(`已同步 ${data.thoughts?.length || 0} 条思考，${data.models?.length || 0} 个模型`, 'success');
+                    }
+                } catch (e) {
+                    console.error('加载数据失败:', e);
+                    this.showMessage('加载数据失败，请刷新重试', 'error');
+                }
+            },
+            
+            // 监听数据变化（每5秒检查一次）
+            setupAutoRefresh: function() {
+                // 监听 storage 事件（电脑端保存时触发）
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'structuredThoughtAssistant') {
+                        console.log('检测到电脑端数据更新');
+                        this.loadData();
+                    }
+                });
+                
+                // 定时检查
+                setInterval(() => {
+                    this.loadData();
+                }, 5000); // 每5秒检查一次
+            },
+            
+            showTab: function(tab) {
+                this.currentTab = tab;
+                document.querySelectorAll('.tab button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                this.renderCurrentTab();
+            },
+            
+            renderCurrentTab: function() {
+                const content = document.getElementById('content');
+                
+                if (!this.data) {
+                    content.innerHTML = '<div class="card">暂无数据</div>';
+                    return;
+                }
+                
+                if (this.currentTab === 'thoughts') {
+                    this.renderThoughts(content);
+                } else if (this.currentTab === 'models') {
+                    this.renderModels(content);
+                } else if (this.currentTab === 'search') {
+                    this.renderSearch(content);
+                }
+            },
+            
+            renderThoughts: function(container) {
+                const thoughts = this.data.thoughts || [];
+                
+                if (thoughts.length === 0) {
+                    container.innerHTML = '<div class="card">暂无思考记录</div>';
+                    return;
+                }
+                
+                let html = '';
+                thoughts.slice(0, 20).forEach(thought => {
+                    const preview = thought.sections?.["核心结论"]?.substring(0, 80) || 
+                                   thought.sections?.["状态看板"]?.substring(0, 80) || 
+                                   '暂无描述';
+                    
+                    html += `
+                        <div class="card item" onclick="App.showThought('${thought.id}')">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${thought.title || thought.id}</div>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">${preview}...</div>
+                            <div>
+                                ${(thought.tags || []).slice(0, 3).map(tag => 
+                                    `<span class="tag">${tag}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            renderModels: function(container) {
+                const models = this.data.models || [];
+                
+                if (models.length === 0) {
+                    container.innerHTML = '<div class="card">暂无思维模型</div>';
+                    return;
+                }
+                
+                let html = '';
+                models.slice(0, 20).forEach(model => {
+                    html += `
+                        <div class="card item" onclick="App.showModel('${model.id}')">
+                            <div style="font-weight: bold; margin-bottom: 5px;">
+                                <span style="color: #ff9800; font-family: monospace;">${model.id}</span>: ${model.name}
+                            </div>
+                            <div style="color: #666; font-size: 14px;">${model.description.substring(0, 100)}...</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            showThought: function(id) {
+                const thought = (this.data.thoughts || []).find(t => t.id === id);
+                if (!thought) return;
+                
+                let content = `
+                    <div class="card">
+                        <div style="margin-bottom: 15px;">
+                            <button onclick="App.renderCurrentTab()" style="background: none; border: none; color: #666; cursor: pointer;">
+                                <i class="fas fa-arrow-left"></i> 返回
+                            </button>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 10px;">${thought.title || thought.id}</h3>
+                        <div style="color: #666; margin-bottom: 15px;">${thought.date || ''}</div>
+                `;
+                
+                // 显示所有部分
+                if (thought.sections) {
+                    for (const [section, text] of Object.entries(thought.sections)) {
+                        if (text) {
+                            content += `
+                                <div style="margin-top: 20px;">
+                                    <div style="font-weight: bold; color: #1a237e; margin-bottom: 10px;">${section}</div>
+                                    <div style="white-space: pre-wrap; font-size: 14px;">${text}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+                
+                content += '</div>';
+                document.getElementById('content').innerHTML = content;
+            },
+            
+            showModel: function(id) {
+                const model = (this.data.models || []).find(m => m.id === id);
+                if (!model) return;
+                
+                let content = `
+                    <div class="card">
+                        <div style="margin-bottom: 15px;">
+                            <button onclick="App.renderCurrentTab()" style="background: none; border: none; color: #666; cursor: pointer;">
+                                <i class="fas fa-arrow-left"></i> 返回
+                            </button>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 5px;">
+                            <span style="color: #ff9800; font-family: monospace;">${model.id}</span>: ${model.name}
+                        </h3>
+                        <div style="color: #666; margin-bottom: 15px;">创建: ${model.date || ''}</div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <div style="font-weight: bold; color: #1a237e; margin-bottom: 10px;">模型描述</div>
+                            <div style="white-space: pre-wrap;">${model.description}</div>
+                        </div>
+                `;
+                
+                if (model.fromThought) {
+                    content += `
+                        <div style="margin-bottom: 20px;">
+                            <div style="font-weight: bold; color: #1a237e; margin-bottom: 10px;">来源思考</div>
+                            <div>
+                                <span style="color: #4caf50; font-weight: bold; cursor: pointer;" 
+                                      onclick="App.showThought('${model.fromThought}')">
+                                    ${model.fromThought}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (model.relatedModels && model.relatedModels.length > 0) {
+                    content += `
+                        <div>
+                            <div style="font-weight: bold; color: #1a237e; margin-bottom: 10px;">关联模型</div>
+                            <div>
+                                ${model.relatedModels.map(mid => 
+                                    `<span style="display: inline-block; background: #e8edff; padding: 5px 10px; 
+                                          border-radius: 4px; margin: 2px; cursor: pointer;"
+                                          onclick="App.showModel('${mid}')">
+                                        ${mid}
+                                    </span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                content += '</div>';
+                document.getElementById('content').innerHTML = content;
+            },
+            
+            showMessage: function(text, type = 'info') {
+                const msg = document.createElement('div');
+                msg.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    animation: slideIn 0.3s;
+                `;
+                msg.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i> ${text}`;
+                document.body.appendChild(msg);
+                
+                setTimeout(() => msg.remove(), 3000);
+            }
+        };
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => App.init());
+        
+        // 全局函数
+        function loadData(force) { App.loadData(force); }
+        function showTab(tab) { App.showTab(tab); }
+    </script>
+</body>
+</html>
