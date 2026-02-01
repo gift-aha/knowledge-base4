@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>思维协同处理器 - 移动端</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 添加统一数据管理器引用 -->
-    <script src="data-manager.js"></script>
     <style>
         :root {
             --primary-color: #1a237e;
@@ -820,6 +818,25 @@
         .mobile-notification.error {
             border-left: 4px solid var(--danger-color);
         }
+        
+        /* 只读模式提示 */
+        .read-only-banner {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to right, #f0ad4e, #ec971f);
+            color: white;
+            padding: 8px 15px;
+            font-size: 13px;
+            z-index: 999;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .read-only-banner i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -839,6 +856,11 @@
                 </button>
             </div>
         </div>
+    </div>
+    
+    <!-- 只读模式提示 -->
+    <div class="read-only-banner">
+        <i class="fas fa-lock"></i> 移动端为只读查看模式，请在电脑端编辑保存数据
     </div>
     
     <!-- 移动端通知区域 -->
@@ -1009,6 +1031,39 @@
     </div>
 
     <script>
+        // ==================== 移动端数据保护 - 只读模式 ====================
+        console.log('移动端进入只读模式，数据将在电脑端保存');
+
+        // 重写 localStorage.setItem 防止移动端保存
+        const originalSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, value) {
+            if (key === 'structuredThoughtAssistant') {
+                console.warn('移动端禁止保存数据，请在电脑端编辑');
+                alert('移动端为查看模式，请在电脑端编辑保存数据');
+                return false; // 阻止保存
+            }
+            return originalSetItem.apply(this, arguments);
+        };
+
+        // 禁用所有保存按钮
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    if (btn.textContent.includes('保存') || btn.textContent.includes('Save')) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-lock"></i> 电脑端编辑';
+                        btn.style.opacity = '0.6';
+                        btn.onclick = function(e) {
+                            e.preventDefault();
+                            alert('请在电脑浏览器中编辑保存数据');
+                            return false;
+                        };
+                    }
+                });
+            }, 1000);
+        });
+
         // ==================== 移动端数据管理器 ====================
         const MobileDataManager = {
             STORAGE_KEY: 'structuredThoughtAssistant',
@@ -1027,47 +1082,19 @@
             
             // 初始化
             init: function() {
-                this.loadData();
-                this.setupDataSync();
+                this.loadFullData();
+                this.setupStorageListener();
                 return this;
             },
             
-            // 加载数据（使用统一数据管理器）
-            loadData: function() {
+            // 加载完整数据（与电脑端完全一致）
+            loadFullData: function() {
                 try {
-                    if (typeof UnifiedDataManager === 'undefined') {
-                        throw new Error('统一数据管理器未加载');
-                    }
-                    
-                    // 使用统一数据管理器获取数据
-                    const fullData = UnifiedDataManager.getFullData();
-                    
-                    // 加载数据
-                    this.thoughts = fullData.thoughts || [];
-                    this.models = fullData.models || [];
-                    this.tags = fullData.tags || {};
-                    this.timeline = fullData.timeline || [];
-                    this.modelConnections = fullData.modelConnections || {};
-                    this.currentVersion = fullData.currentVersion || 'v22.48';
-                    this.lastSaved = fullData.lastSaved || null;
-                    
-                    console.log('移动端数据加载成功（通过统一数据管理器）');
-                    this.showNotification('数据加载成功', 'success');
-                    return true;
-                    
-                } catch (error) {
-                    console.error('使用统一数据管理器失败:', error);
-                    // 回退到直接读取localStorage
-                    return this.loadFromLocalStorage();
-                }
-            },
-            
-            loadFromLocalStorage: function() {
-                // 直接读取localStorage作为备用
-                const saved = localStorage.getItem('structuredThoughtAssistant');
-                if (saved) {
-                    try {
+                    const saved = localStorage.getItem(this.STORAGE_KEY);
+                    if (saved) {
                         const data = JSON.parse(saved);
+                        
+                        // 确保所有字段都有值（与电脑端一致）
                         this.thoughts = data.thoughts || [];
                         this.models = data.models || [];
                         this.tags = data.tags || {};
@@ -1075,107 +1102,37 @@
                         this.modelConnections = data.modelConnections || {};
                         this.currentVersion = data.currentVersion || 'v22.48';
                         this.lastSaved = data.lastSaved || null;
+                        this.nextThoughtId = data.nextThoughtId || 124;
+                        this.nextModelId = data.nextModelId || 81;
                         
-                        console.log('移动端数据加载成功（通过本地存储）');
+                        console.log('移动端完整数据加载成功');
+                        this.showNotification('数据加载成功', 'success');
                         return true;
-                    } catch (e) {
-                        console.error('解析本地存储数据失败:', e);
+                    } else {
+                        console.log('未找到保存的数据，使用空数据');
+                        this.showNotification('首次使用，数据已初始化', 'info');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    this.showNotification('数据加载失败，尝试修复...', 'error');
+                    
+                    // 尝试修复数据
+                    if (this.repairData()) {
+                        this.showNotification('数据修复成功', 'success');
+                        return true;
+                    } else {
+                        this.showNotification('数据修复失败，使用空数据', 'error');
                         return false;
                     }
                 }
+            },
+            
+            // 保存完整数据（与电脑端完全一致）- 在移动端禁用
+            saveFullData: function() {
+                console.warn('移动端禁止保存数据，请在电脑端编辑');
+                this.showNotification('移动端为查看模式，请在电脑端编辑保存数据', 'warning');
                 return false;
-            },
-            
-            // 保存数据（使用统一数据管理器）
-            saveData: function() {
-                try {
-                    if (typeof UnifiedDataManager !== 'undefined') {
-                        const data = {
-                            thoughts: this.thoughts,
-                            models: this.models,
-                            tags: this.tags,
-                            timeline: this.timeline,
-                            modelConnections: this.modelConnections,
-                            currentVersion: this.currentVersion,
-                            lastSaved: new Date().toISOString()
-                        };
-                        
-                        const result = UnifiedDataManager.saveData(data);
-                        
-                        if (result.success) {
-                            this.lastSaved = data.lastSaved;
-                            console.log('移动端数据保存成功（通过统一数据管理器）');
-                            
-                            // 触发自定义事件，通知其他页面
-                            window.dispatchEvent(new CustomEvent('data-saved', {
-                                detail: { timestamp: Date.now() }
-                            }));
-                            
-                            return true;
-                        }
-                    }
-                    
-                    // 回退到直接保存到localStorage
-                    return this.saveToLocalStorage();
-                    
-                } catch (error) {
-                    console.error('保存数据失败:', error);
-                    return false;
-                }
-            },
-            
-            saveToLocalStorage: function() {
-                const data = {
-                    thoughts: this.thoughts,
-                    models: this.models,
-                    tags: this.tags,
-                    timeline: this.timeline,
-                    modelConnections: this.modelConnections,
-                    currentVersion: this.currentVersion,
-                    lastSaved: new Date().toISOString()
-                };
-                
-                try {
-                    localStorage.setItem('structuredThoughtAssistant', JSON.stringify(data));
-                    this.lastSaved = data.lastSaved;
-                    console.log('移动端数据保存成功（通过本地存储）');
-                    
-                    // 触发自定义事件，通知其他页面
-                    window.dispatchEvent(new CustomEvent('data-saved', {
-                        detail: { timestamp: Date.now() }
-                    }));
-                    
-                    return true;
-                } catch (error) {
-                    console.error('保存到本地存储失败:', error);
-                    return false;
-                }
-            },
-            
-            // 添加数据同步监听
-            setupDataSync: function() {
-                // 监听storage事件
-                window.addEventListener('storage', (event) => {
-                    if (event.key === 'structuredThoughtAssistant' && event.newValue) {
-                        console.log('检测到数据更新，重新加载...');
-                        this.loadData();
-                        
-                        // 更新UI
-                        if (MobileUI && MobileUI.currentView) {
-                            MobileUI.renderView(MobileUI.currentView);
-                        }
-                    }
-                });
-                
-                // 监听统一数据管理器事件
-                window.addEventListener('unified-data-updated', () => {
-                    console.log('收到统一数据更新事件');
-                    this.loadData();
-                    
-                    if (MobileUI && MobileUI.currentView) {
-                        MobileUI.renderView(MobileUI.currentView);
-                    }
-                });
             },
             
             // 获取思考记录
@@ -1324,8 +1281,8 @@
                     this.nextThoughtId = imported.nextThoughtId || this.nextThoughtId;
                     this.nextModelId = imported.nextModelId || this.nextModelId;
                     
-                    // 保存到本地存储
-                    this.saveData();
+                    // 保存到本地存储（在移动端会被阻止）
+                    this.saveFullData();
                     
                     this.showNotification('数据导入成功', 'success');
                     return { success: true, message: '数据导入成功' };
@@ -1372,7 +1329,7 @@
                         const latestBackup = localStorage.getItem(backupKeys[0]);
                         if (latestBackup) {
                             localStorage.setItem(this.STORAGE_KEY, latestBackup);
-                            this.loadData();
+                            this.loadFullData();
                             return true;
                         }
                     }
@@ -1388,7 +1345,7 @@
                     this.nextThoughtId = 124;
                     this.nextModelId = 81;
                     
-                    this.saveData();
+                    this.saveFullData();
                     return true;
                 } catch (error) {
                     console.error('修复数据失败:', error);
@@ -1414,6 +1371,24 @@
                 return false;
             },
             
+            // 设置storage事件监听器（监听其他标签页的数据变化）
+            setupStorageListener: function() {
+                window.addEventListener('storage', (event) => {
+                    if (event.key === this.STORAGE_KEY) {
+                        console.log('检测到其他标签页的数据变化，重新加载数据');
+                        this.loadFullData();
+                        this.showNotification('数据已更新，重新加载中...', 'info');
+                        
+                        // 通知UI管理器重新渲染
+                        if (typeof MobileUI !== 'undefined' && MobileUI.currentView) {
+                            setTimeout(() => {
+                                MobileUI.renderView(MobileUI.currentView);
+                            }, 500);
+                        }
+                    }
+                });
+            },
+            
             // 显示通知
             showNotification: function(message, type = 'info') {
                 if (typeof MobileUI !== 'undefined' && MobileUI.showNotification) {
@@ -1430,7 +1405,7 @@
             
             // 同步数据（重新加载）
             syncData: function() {
-                this.loadData();
+                this.loadFullData();
                 this.updateStats();
                 this.showNotification('数据同步完成', 'success');
                 return true;
