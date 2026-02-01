@@ -2723,10 +2723,6 @@
                 console.log('电脑端UI初始化完成');
             },
             
-            // ==================== 其他UI方法保持不变 ====================
-            // 由于代码过长，这里省略中间部分，保持原有功能不变
-            // 所有原有UI方法都保持原样，只修改数据存储部分
-            
             setupNavigation: function() {
                 document.querySelectorAll('.nav-links a').forEach(item => {
                     item.addEventListener('click', (e) => {
@@ -2910,9 +2906,7 @@
             },
             
             // ==================== 视图渲染方法 ====================
-            // 由于代码过长，这里只列出方法名，具体实现保持原样
             renderOverview: function() {
-                // 保持原有实现
                 const html = `
                     <div class="content-header">
                         <h2>核心资产总览</h2>
@@ -2966,9 +2960,7 @@
                 document.getElementById('content-area').innerHTML = html;
             },
             
-            // 其他渲染方法保持原样
             renderAddStructured: function() {
-                // 保持原有实现
                 const html = `
                     <div class="content-header">
                         <h2>结构化输入思考内容</h2>
@@ -3014,7 +3006,6 @@
             },
             
             renderThoughts: function() {
-                // 保持原有实现
                 const thoughts = DataStore.thoughts;
                 
                 let thoughtsHTML = '';
@@ -3057,11 +3048,2266 @@
                 document.getElementById('content-area').innerHTML = html;
             },
             
-            // 更多渲染方法...
-            // 由于代码过长，这里省略具体实现
+            renderModels: function() {
+                const models = DataStore.models;
+                
+                let modelsHTML = '';
+                models.forEach(model => {
+                    const summary = model.description ? 
+                        model.description.substring(0, 80) + '...' : '';
+                    
+                    modelsHTML += `
+                        <div class="model-card" onclick="showModelDetail('${model.id}')">
+                            <div class="card-actions">
+                                <div class="action-icon edit" onclick="event.stopPropagation(); editModel('${model.id}')" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="action-icon delete" onclick="event.stopPropagation(); openDeleteModal('model', '${model.id}')" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </div>
+                            </div>
+                            <div class="model-id">${model.id}</div>
+                            <div class="model-name">${model.name}</div>
+                            <div class="model-desc">${summary}</div>
+                            <div class="model-tags">
+                                ${model.tags ? model.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                            </div>
+                            ${model.fromThought ? `<div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent-color);">来源: ${model.fromThought}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                const html = `
+                    <div class="content-header">
+                        <h2>核心思维模型索引</h2>
+                        <p>系统版本: ${DataStore.currentVersion} | 共 ${DataStore.models.length} 个思维模型</p>
+                    </div>
+                    
+                    <div class="models-list">
+                        ${modelsHTML || '<div class="empty-state"><i class="fas fa-cube"></i><p>暂无思维模型</p></div>'}
+                    </div>
+                    
+                    <div class="system-status-card" style="margin-top: 30px;">
+                        <h3><i class="fas fa-project-diagram"></i> 模型关联网络状态</h3>
+                        <p>当前共有 ${Object.keys(DataStore.modelConnections).length} 个模型建立了关联网络</p>
+                        <p>关联密度: ${DataStore.models.length > 0 ? Math.round((Object.keys(DataStore.modelConnections).length / DataStore.models.length) * 100) : 0}%</p>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
             
-            // ==================== 全局函数 ====================
-            // 保持原有全局函数不变
+            renderAddModel: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>创建思维模型</h2>
+                        <p>添加新的核心思维模型到系统中</p>
+                    </div>
+                    
+                    <div class="input-section">
+                        <h3><i class="fas fa-plus-circle"></i> 新增思维模型</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型ID (可选)</label>
+                            <input type="text" id="model-id" placeholder="例如: M-81 (留空则自动生成)">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型名称</label>
+                            <input type="text" id="model-name" placeholder="输入模型名称" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">来源思考ID (可选)</label>
+                            <input type="text" id="model-from-thought" placeholder="例如: #123" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型描述</label>
+                            <textarea id="model-description" placeholder="详细描述此思维模型..." style="width: 100%; padding: 10px; min-height: 200px;"></textarea>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveModel()">
+                                <i class="fas fa-save"></i> 保存模型
+                            </button>
+                            <button class="btn btn-secondary" onclick="UIManager.loadView('models')">
+                                <i class="fas fa-list"></i> 查看所有模型
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="index-panel">
+                        <h4><i class="fas fa-history"></i> 最近添加的思维模型</h4>
+                        <div id="recent-models-list">
+                            ${this.renderModelList(DataStore.getRecentModels(3), true)}
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderKeywords: function() {
+                const topTags = DataStore.getTopTags(20);
+                
+                let tagsHTML = '';
+                topTags.forEach(tagInfo => {
+                    const size = Math.min(24, 14 + Math.log(tagInfo.count + 1) * 4);
+                    tagsHTML += `
+                        <span class="tag" style="font-size: ${size}px; padding: 6px 12px; cursor: pointer;" 
+                              onclick="UIManager.searchByTag('${tagInfo.tag}')">
+                            ${tagInfo.tag} <span style="font-size: 0.8em; opacity: 0.7;">(${tagInfo.count})</span>
+                        </span>
+                    `;
+                });
+                
+                const categories = DataStore.tagCategories;
+                let categoriesHTML = '';
+                for (const category in categories) {
+                    categoriesHTML += `
+                        <div class="tag-category" style="margin-bottom: 25px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                            <div class="tag-category-title" style="font-weight: 600; color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem;">
+                                ${category}
+                            </div>
+                            <div class="category-tags" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${categories[category].map(tag => `
+                                    <span class="tag" style="cursor: pointer;" onclick="UIManager.searchByTag('${tag}')">
+                                        ${tag}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                const html = `
+                    <div class="content-header">
+                        <h2>标签分类检索</h2>
+                        <p>按标签浏览系统中的思考记录和思维模型</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">标签热度云</div>
+                            </div>
+                            <div class="detail-id">共 ${Object.keys(DataStore.tags).length} 个标签</div>
+                        </div>
+                        <div class="detail-content">
+                            <div class="tag-cloud" style="margin-bottom: 30px; padding: 20px; text-align: center;">
+                                ${tagsHTML || '<p>暂无标签数据</p>'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">标签分类体系</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            ${categoriesHTML}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">搜索特定标签</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <input type="text" id="tag-search-input" placeholder="输入标签名称..." style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <button class="btn btn-primary" onclick="UIManager.searchByTag(document.getElementById('tag-search-input').value)" style="padding: 10px 20px;">
+                                    <i class="fas fa-search"></i> 搜索
+                                </button>
+                            </div>
+                            <div id="tag-search-results">
+                                <!-- 搜索结果将在这里显示 -->
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderHowToUse: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>如何使用本系统</h2>
+                        <p>思维协同处理器使用指南</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">核心功能概述</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p><strong>思维协同处理器</strong>是一个帮助您结构化思考、整理思维模型、建立知识关联的工具系统。它包含以下核心模块：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">📝 结构化输入思考</h4>
+                                <p>按照"状态看板 → 核心结论 → 模型延伸与整合 → 行动/思维要点 → 架构更新"的灵活格式记录思考过程。系统会自动解析各个部分并提取关键信息。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🧠 思维模型管理</h4>
+                                <p>从思考中提取可复用的分析框架，建立模型关联网络，形成可迁移的思维工具库。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🏷️ 标签分类检索</h4>
+                                <p>通过标签系统对思考和模型进行分类，支持按主题、情绪、领域等维度进行快速检索。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🔄 模型关联网络</h4>
+                                <p>可视化展示模型之间的关联关系，帮助理解知识结构，发现新的关联模式。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">📊 数据管理与备份</h4>
+                                <p>支持数据导出、导入和备份，确保您的思考数据安全可靠。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">使用流程</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <ol style="padding-left: 20px; line-height: 1.8;">
+                                <li><strong>识别情境</strong>：明确当前面临的情绪状态或问题情境</li>
+                                <li><strong>结构化记录</strong>：在"结构化输入思考"页面记录思考过程</li>
+                                <li><strong>提取模型</strong>：从思考中提取可复用的思维模型</li>
+                                <li><strong>建立关联</strong>：将新模型与已有模型建立关联</li>
+                                <li><strong>标签归类</strong>：为思考和模型添加合适的标签</li>
+                                <li><strong>定期回顾</strong>：通过标签系统回顾相关主题的思考</li>
+                                <li><strong>迁移应用</strong>：将模型应用到新的情境中</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">格式示例</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div class="format-examples">
+                                <div class="format-example">
+                                    <div class="format-example-title">基本格式</div>
+                                    <pre>💎 **状态看板**
+        **系统版本**：v22.48
+        **当前思考ID**：#123
+        **思考主题**：思考的主题
+        **思考类型**：🎵 歌曲分析
+        
+        🌌 **核心结论**
+        这里是核心观点...
+        
+        🧩 **模型延伸与整合**
+        这里是模型扩展...
+        
+        📚 **行动/思维要点**
+        1. 【要点一】
+        2. 【要点二】
+        
+        📂 **架构更新**
+        * 新增核心模型：M-80</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderMilestones: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>系统演进里程碑</h2>
+                        <p>思维协同处理器的重要发展节点</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">版本演进历程</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p>系统从最初的个人思考工具，逐渐发展成为功能完整的思维协同处理器：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🚀 基础阶段 (v1.0 - v5.0)</h4>
+                                <p>建立基础情感模型，包括工具化、错位、遗憾等核心概念。开始尝试将日常思考结构化。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">💡 深化阶段 (v6.0 - v10.0)</h4>
+                                <p>深化关系模型，引入成熟馈赠、无限博弈等概念。开始形成模型化思维。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🌌 拓展阶段 (v11.0 - v15.0)</h4>
+                                <p>拓展存在哲学，发展存在勘探、水性智慧等模型。开始建立系统化的知识结构。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🛡️ 完善阶段 (v16.0 - v18.0)</h4>
+                                <p>完善防御机制与病理学模型，包括梦境寄生、情感麻痹等。开始关注心理健康维度。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🤝 整合阶段 (v18.0 - v20.2)</h4>
+                                <p>整合关系动力学、健康共建、意义整合等模型。开始形成完整的系统架构。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🌐 宏观阶段 (v20.3 - v21.3)</h4>
+                                <p) {
+                                    document.getElementById('content-area').innerHTML = html;
+                                },
+            
+            renderArchitecture: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>系统架构特性</h2>
+                        <p>思维协同处理器的技术架构与设计理念</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">三层架构设计</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p>系统采用三层架构设计，确保功能的清晰分离与高效协同：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🏗️ 核心模型层</h4>
+                                <p>包含所有可复用的思维模型（M-系列），这些模型是从具体思考中抽象出来的分析框架。每个模型都有明确的定义、应用场景和关联模型。</p>
+                                <p><strong>特点</strong>：可迁移、可组合、可拓展</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🔍 现象分析层</h4>
+                                <p>包含所有具体的思考记录（#-系列），这些记录是对特定现象、问题或情感的分析。每份思考都遵循结构化格式，便于提取模型。</p>
+                                <p><strong>特点</strong>：具体、情境化、可追溯</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🛠️ 实践工具箱</h4>
+                                <p>包含从思考中提取的行动要点、思维工具和实践建议。这些工具可以直接应用于日常生活和问题解决。</p>
+                                <p><strong>特点</strong>：实用、可操作、即时可用</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">数据存储架构</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p>系统采用统一数据管理器，支持电脑端和移动端的数据同步：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">💾 本地存储</h4>
+                                <p>所有数据默认存储在浏览器的本地存储中，确保数据隐私和安全。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🔄 数据同步</h4>
+                                <p>通过统一数据管理器，实现电脑端和移动端的数据实时同步。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">📤 导入导出</h4>
+                                <p>支持数据的完整导出和选择性导入，便于数据备份和迁移。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">智能解析引擎</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p>系统内置智能解析引擎，支持灵活格式的结构化内容解析：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🎯 标题识别</h4>
+                                <p>能够识别多种形式的标题格式，如"💎 **状态看板**"、"🌌 核心结论"、"状态看板："等。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🏷️ 元数据提取</h4>
+                                <p>自动从"状态看板"部分提取思考ID、主题、类型、标签、关联模型等元数据。</p>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🔗 关联识别</h4>
+                                <p>自动识别并提取思考中提到的模型ID（M-系列）和思考ID（#-系列），建立关联关系。</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderTagReview: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>标签复核中心</h2>
+                        <p>检查和管理系统中的标签，确保分类准确性</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">标签统计</div>
+                            </div>
+                            <div class="detail-id">共 ${Object.keys(DataStore.tags).length} 个标签</div>
+                        </div>
+                        <div class="detail-content">
+                            <p>当前系统中的标签使用情况：</p>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">📊 标签热度排行</h4>
+                                <div id="tag-stats-container">
+                                    ${this.renderTagStats()}
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">🔄 标签一致性检查</h4>
+                                <p>检查标签使用的一致性，发现可能的标签冲突或重复。</p>
+                                <button class="btn btn-primary" onclick="UIManager.checkTagConsistency()" style="margin-top: 10px;">
+                                    <i class="fas fa-check-circle"></i> 开始检查
+                                </button>
+                                <div id="consistency-results" style="margin-top: 15px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">标签管理</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <p>选择需要复核标签的条目：</p>
+                            
+                            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                                <div style="flex: 1;">
+                                    <h5 style="margin-bottom: 10px; color: var(--primary-color);">思考记录</h5>
+                                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px;">
+                                        ${this.renderThoughtListForTagReview()}
+                                    </div>
+                                </div>
+                                
+                                <div style="flex: 1;">
+                                    <h5 style="margin-bottom: 10px; color: var(--primary-color);">思维模型</h5>
+                                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px;">
+                                        ${this.renderModelListForTagReview()}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 25px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                                <h5 style="color: var(--primary-color); margin-bottom: 15px;">标签建议系统</h5>
+                                <p>根据现有标签，为新内容推荐合适的标签：</p>
+                                
+                                <div style="margin-top: 15px;">
+                                    <input type="text" id="tag-suggestion-input" placeholder="输入内容描述..." style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+                                    <button class="btn btn-secondary" onclick="UIManager.getTagSuggestions()">
+                                        <i class="fas fa-lightbulb"></i> 获取标签建议
+                                    </button>
+                                    <div id="tag-suggestions-container" style="margin-top: 15px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderNetworkAnalysis: function() {
+                const html = `
+                    <div class="content-header">
+                        <h2>模型关联网络分析</h2>
+                        <p>可视化展示思维模型之间的关联关系</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">网络概览</div>
+                            </div>
+                            <div class="detail-id">${Object.keys(DataStore.modelConnections).length} 个模型已关联</div>
+                        </div>
+                        <div class="detail-content">
+                            <p>当前模型关联网络状态：</p>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0;">
+                                <div style="padding: 15px; background-color: #f0f7ff; border-radius: 8px;">
+                                    <h5 style="color: var(--primary-color); margin-bottom: 10px;">关联密度</h5>
+                                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                                        ${DataStore.models.length > 0 ? Math.round((Object.keys(DataStore.modelConnections).length / DataStore.models.length) * 100) : 0}%
+                                    </div>
+                                    <p style="font-size: 0.9rem; color: var(--text-light);">已建立关联的模型比例</p>
+                                </div>
+                                
+                                <div style="padding: 15px; background-color: #f5f0ff; border-radius: 8px;">
+                                    <h5 style="color: var(--primary-color); margin-bottom: 10px;">平均连接数</h5>
+                                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                                        ${Object.keys(DataStore.modelConnections).length > 0 ? 
+                                            Math.round(Object.values(DataStore.modelConnections).reduce((sum, conn) => sum + conn.length, 0) / Object.keys(DataStore.modelConnections).length * 10) / 10 : 
+                                            0}
+                                    </div>
+                                    <p style="font-size: 0.9rem; color: var(--text-light);">每个关联模型的平均连接数</p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 25px 0;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">核心枢纽模型</h4>
+                                <div id="hub-models-container">
+                                    ${this.renderHubModels()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">选择模型查看网络</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="margin-bottom: 20px;">
+                                <select id="model-network-selector" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;" onchange="UIManager.updateNetworkGraph(this.value)">
+                                    <option value="">选择模型...</option>
+                                    ${DataStore.models.map(model => `
+                                        <option value="${model.id}" ${model.id === this.currentModelId ? 'selected' : ''}>${model.id} - ${model.name}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            
+                            <div id="network-detail-container" style="min-height: 300px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid var(--border-color);">
+                                ${this.renderNetworkDetail()}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">网络分析工具</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="margin-bottom: 20px;">
+                                <button class="btn btn-primary" onclick="UIManager.findMissingConnections()">
+                                    <i class="fas fa-link"></i> 发现潜在关联
+                                </button>
+                                <button class="btn btn-secondary" onclick="UIManager.exportNetworkData()" style="margin-left: 10px;">
+                                    <i class="fas fa-download"></i> 导出网络数据
+                                </button>
+                            </div>
+                            
+                            <div id="network-analysis-results" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderTimeline: function() {
+                const timeline = DataStore.timeline;
+                
+                let timelineHTML = '';
+                timeline.forEach((item, index) => {
+                    timelineHTML += `
+                        <div class="timeline-item" onclick="UIManager.showTimelineDetail('${item.id}')">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-edit-actions">
+                                <div class="timeline-edit-btn edit" onclick="event.stopPropagation(); UIManager.editTimelineItem('${item.id}')" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="timeline-edit-btn delete" onclick="event.stopPropagation(); UIManager.deleteTimelineItem('${item.id}')" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </div>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-version">${item.version}</div>
+                                <div class="timeline-date">${item.date}</div>
+                                <div class="timeline-desc">${item.event}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const html = `
+                    <div class="content-header">
+                        <h2>系统演进历程</h2>
+                        <p>思维协同处理器的发展历史与版本演进</p>
+                    </div>
+                    
+                    <div class="timeline-actions">
+                        <button class="btn btn-primary" onclick="UIManager.addNewTimelineItem()">
+                            <i class="fas fa-plus"></i> 新增记录
+                        </button>
+                    </div>
+                    
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        ${timelineHTML || '<div class="empty-state"><i class="fas fa-history"></i><p>暂无演进记录</p></div>'}
+                    </div>
+                    
+                    <div id="timeline-detail-container">
+                        <!-- 时间线详情将在这里显示 -->
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            renderDataManagement: function() {
+                const backups = this.getBackupList();
+                
+                let backupsHTML = '';
+                if (backups.length > 0) {
+                    backups.forEach(backup => {
+                        backupsHTML += `
+                            <div class="index-item">
+                                <div class="index-item-id">${backup.date}</div>
+                                <div class="index-item-title">备份 ${backup.key}</div>
+                                <div class="index-item-actions">
+                                    <span class="index-item-action" onclick="UIManager.restoreBackup('${backup.key}')" title="恢复">
+                                        <i class="fas fa-undo"></i>
+                                    </span>
+                                    <span class="index-item-action" onclick="UIManager.deleteBackup('${backup.key}')" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    backupsHTML = '<div class="empty-state" style="padding: 20px;"><i class="fas fa-inbox"></i><p>暂无备份数据</p></div>';
+                }
+                
+                const html = `
+                    <div class="content-header">
+                        <h2>数据管理与备份</h2>
+                        <p>管理您的思考数据，确保数据安全</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">数据概览</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                                <div style="padding: 15px; background-color: #f0f7ff; border-radius: 8px;">
+                                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color);">${DataStore.thoughts.length}</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-light);">思考记录</div>
+                                </div>
+                                <div style="padding: 15px; background-color: #f5f0ff; border-radius: 8px;">
+                                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color);">${DataStore.models.length}</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-light);">思维模型</div>
+                                </div>
+                                <div style="padding: 15px; background-color: #f0fff4; border-radius: 8px;">
+                                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color);">${Object.keys(DataStore.tags).length}</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-light);">标签</div>
+                                </div>
+                                <div style="padding: 15px; background-color: #fff8f0; border-radius: 8px;">
+                                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color);">${backups.length}</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-light);">备份</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 30px;">
+                                <h4 style="color: var(--primary-color); margin-bottom: 15px;">最后保存时间</h4>
+                                <p>${DataStore.lastSaved ? new Date(DataStore.lastSaved).toLocaleString() : '未知'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">备份管理</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="margin-bottom: 20px;">
+                                <button class="btn btn-primary" onclick="UIManager.createBackup()">
+                                    <i class="fas fa-save"></i> 创建新备份
+                                </button>
+                                <button class="btn btn-secondary" onclick="UIManager.exportAllData()" style="margin-left: 10px;">
+                                    <i class="fas fa-download"></i> 导出全部数据
+                                </button>
+                            </div>
+                            
+                            <div class="index-panel">
+                                <h4>现有备份</h4>
+                                <div class="index-list">
+                                    ${backupsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-view" style="margin-top: 25px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">数据导入</div>
+                            </div>
+                        </div>
+                        <div class="detail-content">
+                            <div style="margin-bottom: 15px;">
+                                <p>从JSON文件导入数据（将覆盖当前数据）：</p>
+                                <input type="file" id="import-file" accept=".json" style="margin: 10px 0;">
+                                <button class="btn btn-warning" onclick="UIManager.importFromFile()">
+                                    <i class="fas fa-file-import"></i> 导入数据
+                                </button>
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background-color: #fff8f0; border-radius: 8px;">
+                                <h5 style="color: var(--warning-color); margin-bottom: 10px;">⚠️ 注意事项</h5>
+                                <ul style="padding-left: 20px; color: var(--text-light);">
+                                    <li>导入数据将完全覆盖当前数据</li>
+                                    <li>建议在导入前先备份当前数据</li>
+                                    <li>仅支持本系统导出的JSON格式</li>
+                                    <li>导入后需要刷新页面</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('content-area').innerHTML = html;
+            },
+            
+            // ==================== 辅助方法 ====================
+            renderThoughtList: function(thoughts, showActions = false) {
+                if (!thoughts || thoughts.length === 0) {
+                    return '<div class="empty-state" style="padding: 20px;"><i class="fas fa-inbox"></i><p>暂无思考记录</p></div>';
+                }
+                
+                let html = '';
+                thoughts.forEach(thought => {
+                    html += `
+                        <div class="index-item" onclick="showThoughtDetail('${thought.id}')">
+                            <div class="index-item-id">${thought.id}</div>
+                            <div class="index-item-title">${thought.title || '无标题'}</div>
+                            ${showActions ? `
+                                <div class="index-item-actions">
+                                    <span class="index-item-action" onclick="event.stopPropagation(); editThought('${thought.id}')" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                    <span class="index-item-action" onclick="event.stopPropagation(); openDeleteModal('thought', '${thought.id}')" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                return html;
+            },
+            
+            renderModelList: function(models, showActions = false) {
+                if (!models || models.length === 0) {
+                    return '<div class="empty-state" style="padding: 20px;"><i class="fas fa-cube"></i><p>暂无思维模型</p></div>';
+                }
+                
+                let html = '';
+                models.forEach(model => {
+                    html += `
+                        <div class="index-item" onclick="showModelDetail('${model.id}')">
+                            <div class="index-item-id">${model.id}</div>
+                            <div class="index-item-title">${model.name}</div>
+                            ${showActions ? `
+                                <div class="index-item-actions">
+                                    <span class="index-item-action" onclick="event.stopPropagation(); editModel('${model.id}')" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                    <span class="index-item-action" onclick="event.stopPropagation(); openDeleteModal('model', '${model.id}')" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                return html;
+            },
+            
+            renderTagStats: function() {
+                const topTags = DataStore.getTopTags(15);
+                
+                let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                topTags.forEach(tagInfo => {
+                    const percentage = Math.round((tagInfo.count / DataStore.thoughts.length) * 100) || 0;
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 100px; font-size: 0.9rem;">${tagInfo.tag}</div>
+                            <div style="flex: 1;">
+                                <div style="height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden;">
+                                    <div style="height: 100%; width: ${percentage}%; background-color: var(--accent-color);"></div>
+                                </div>
+                            </div>
+                            <div style="width: 40px; text-align: right; font-size: 0.9rem;">${tagInfo.count}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                return html;
+            },
+            
+            renderThoughtListForTagReview: function() {
+                const thoughts = DataStore.thoughts.slice(0, 10);
+                
+                let html = '';
+                thoughts.forEach(thought => {
+                    html += `
+                        <div style="padding: 8px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="UIManager.openTagReviewModal('thought', '${thought.id}')">
+                            <div style="font-weight: bold; color: var(--primary-color);">${thought.id}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${thought.title || '无标题'}</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px;">
+                                ${thought.tags ? thought.tags.map(tag => `<span style="display: inline-block; padding: 2px 5px; background-color: #f0f0f0; border-radius: 3px; margin-right: 3px;">${tag}</span>`).join('') : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return html;
+            },
+            
+            renderModelListForTagReview: function() {
+                const models = DataStore.models.slice(0, 10);
+                
+                let html = '';
+                models.forEach(model => {
+                    html += `
+                        <div style="padding: 8px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="UIManager.openTagReviewModal('model', '${model.id}')">
+                            <div style="font-weight: bold; color: var(--warning-color);">${model.id}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${model.name}</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px;">
+                                ${model.tags ? model.tags.map(tag => `<span style="display: inline-block; padding: 2px 5px; background-color: #f0f0f0; border-radius: 3px; margin-right: 3px;">${tag}</span>`).join('') : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return html;
+            },
+            
+            renderHubModels: function() {
+                const connections = DataStore.modelConnections;
+                const hubModels = Object.entries(connections)
+                    .map(([modelId, conns]) => ({ id: modelId, connections: conns.length }))
+                    .sort((a, b) => b.connections - a.connections)
+                    .slice(0, 5);
+                
+                let html = '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+                hubModels.forEach(hub => {
+                    const model = DataStore.getModelById(hub.id);
+                    if (model) {
+                        html += `
+                            <div style="padding: 10px; background-color: white; border-radius: 6px; border: 1px solid var(--border-color); min-width: 150px;">
+                                <div style="font-weight: bold; color: var(--primary-color);">${model.id}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 5px;">${model.name}</div>
+                                <div style="font-size: 0.8rem; color: var(--accent-color);">${hub.connections} 个连接</div>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div>';
+                
+                return html;
+            },
+            
+            renderNetworkDetail: function() {
+                const network = DataStore.getModelNetwork(this.currentModelId);
+                
+                if (!network) {
+                    return `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="fas fa-project-diagram" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                            <p>选择模型查看关联网络</p>
+                        </div>
+                    `;
+                }
+                
+                let html = `
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 5px;">${network.center.id}</h4>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">${network.center.name}</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px;">
+                `;
+                
+                network.connections.forEach(model => {
+                    html += `
+                        <div class="network-node" onclick="UIManager.selectItem('${model.id}', 'model')" style="min-width: 100px; text-align: center;">
+                            <div style="font-weight: bold; color: var(--accent-color);">${model.id}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-light);">${model.name.substring(0, 20)}${model.name.length > 20 ? '...' : ''}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 10px;">网络分析</h5>
+                        <p><strong>连接数:</strong> ${network.connections.length}</p>
+                        <p><strong>网络密度:</strong> ${network.connections.length > 0 ? '高' : '低'}</p>
+                        <p><strong>核心地位:</strong> ${network.connections.length >= 3 ? '枢纽节点' : '边缘节点'}</p>
+                    </div>
+                `;
+                
+                return html;
+            },
+            
+            // ==================== 其他UI方法 ====================
+            showAlert: function(message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    ${message}
+                `;
+                
+                const contentArea = document.getElementById('content-area');
+                contentArea.insertBefore(alertDiv, contentArea.firstChild);
+                
+                setTimeout(() => {
+                    alertDiv.style.opacity = '0';
+                    setTimeout(() => alertDiv.remove(), 300);
+                }, 3000);
+            },
+            
+            selectItem: function(id, type) {
+                if (type === 'model') {
+                    this.currentModelId = id;
+                    this.updateNetworkGraph(id);
+                    showModelDetail(id);
+                } else if (type === 'thought') {
+                    showThoughtDetail(id);
+                }
+            },
+            
+            openDeleteModal: function(type, id) {
+                this.itemToDelete = id;
+                this.deleteType = type;
+                
+                let message = '确定要删除此项吗？此操作不可撤销。';
+                let item = null;
+                
+                if (type === 'thought') {
+                    item = DataStore.getThoughtById(id);
+                    if (item) {
+                        message = `确定要删除思考记录 ${id} "${item.title || '无标题'}" 吗？此操作不可撤销。`;
+                    }
+                } else if (type === 'model') {
+                    item = DataStore.getModelById(id);
+                    if (item) {
+                        message = `确定要删除思维模型 ${id} "${item.name}" 吗？此操作不可撤销。`;
+                    }
+                }
+                
+                document.getElementById('delete-message').textContent = message;
+                document.getElementById('delete-modal').style.display = 'flex';
+            },
+            
+            closeDeleteModal: function() {
+                document.getElementById('delete-modal').style.display = 'none';
+                this.itemToDelete = null;
+                this.deleteType = null;
+            },
+            
+            confirmDelete: function() {
+                if (!this.itemToDelete || !this.deleteType) return;
+                
+                let success = false;
+                if (this.deleteType === 'thought') {
+                    success = DataStore.deleteThought(this.itemToDelete);
+                } else if (this.deleteType === 'model') {
+                    success = DataStore.deleteModel(this.itemToDelete);
+                }
+                
+                if (success) {
+                    this.showAlert(`${this.deleteType === 'thought' ? '思考记录' : '思维模型'}已删除`, 'success');
+                    this.loadView(this.currentView);
+                } else {
+                    this.showAlert('删除失败', 'danger');
+                }
+                
+                this.closeDeleteModal();
+            },
+            
+            openTagReviewModal: function(type, id) {
+                this.tagReviewItem = id;
+                this.tagReviewType = type;
+                
+                let item = null;
+                if (type === 'thought') {
+                    item = DataStore.getThoughtById(id);
+                    document.getElementById('tag-review-title').textContent = `思考记录 ${id} 的标签`;
+                } else if (type === 'model') {
+                    item = DataStore.getModelById(id);
+                    document.getElementById('tag-review-title').textContent = `思维模型 ${id} 的标签`;
+                }
+                
+                this.currentTagsForReview = item && item.tags ? [...item.tags] : [];
+                this.renderCurrentTags();
+                
+                document.getElementById('tag-review-modal').style.display = 'flex';
+            },
+            
+            closeTagReviewModal: function() {
+                document.getElementById('tag-review-modal').style.display = 'none';
+                this.tagReviewItem = null;
+                this.tagReviewType = null;
+                this.currentTagsForReview = [];
+            },
+            
+            saveTagReview: function() {
+                if (!this.tagReviewItem || !this.tagReviewType) return;
+                
+                let item = null;
+                if (this.tagReviewType === 'thought') {
+                    item = DataStore.getThoughtById(this.tagReviewItem);
+                } else if (this.tagReviewType === 'model') {
+                    item = DataStore.getModelById(this.tagReviewItem);
+                }
+                
+                if (item) {
+                    item.tags = [...this.currentTagsForReview];
+                    
+                    let success = false;
+                    if (this.tagReviewType === 'thought') {
+                        success = DataStore.updateThought(this.tagReviewItem, item);
+                    } else if (this.tagReviewType === 'model') {
+                        success = DataStore.updateModel(this.tagReviewItem, item);
+                    }
+                    
+                    if (success) {
+                        this.showAlert('标签已保存', 'success');
+                    } else {
+                        this.showAlert('保存失败', 'danger');
+                    }
+                }
+            },
+            
+            renderCurrentTags: function() {
+                const container = document.getElementById('current-tags-container');
+                container.innerHTML = '';
+                
+                this.currentTagsForReview.forEach((tag, index) => {
+                    const tagElement = document.createElement('div');
+                    tagElement.style.cssText = `
+                        display: inline-flex;
+                        align-items: center;
+                        background-color: rgba(92, 107, 192, 0.1);
+                        color: var(--accent-color);
+                        padding: 5px 10px;
+                        border-radius: 4px;
+                        margin: 5px;
+                        font-size: 0.9rem;
+                    `;
+                    
+                    tagElement.innerHTML = `
+                        ${tag}
+                        <span onclick="UIManager.removeTag(${index})" style="margin-left: 8px; cursor: pointer; color: var(--danger-color);">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    `;
+                    
+                    container.appendChild(tagElement);
+                });
+                
+                if (this.currentTagsForReview.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-light); padding: 10px; text-align: center;">暂无标签</div>';
+                }
+            },
+            
+            removeTag: function(index) {
+                this.currentTagsForReview.splice(index, 1);
+                this.renderCurrentTags();
+            },
+            
+            addNewTag: function() {
+                const input = document.getElementById('new-tag-input');
+                if (input && input.value.trim()) {
+                    this.currentTagsForReview.push(input.value.trim());
+                    input.value = '';
+                    this.renderCurrentTags();
+                }
+            },
+            
+            addTagFromInput: function() {
+                this.addNewTag();
+            },
+            
+            addSuggestedTag: function(tag) {
+                if (!this.currentTagsForReview.includes(tag)) {
+                    this.currentTagsForReview.push(tag);
+                    this.renderCurrentTags();
+                }
+            },
+            
+            applyTagReview: function() {
+                this.saveTagReview();
+                this.closeTagReviewModal();
+            },
+            
+            openSectionEditModal: function(thoughtId) {
+                const thought = DataStore.openSectionEditor(thoughtId);
+                if (!thought) return;
+                
+                // 设置ID
+                document.getElementById('edit-thought-id').value = thought.id;
+                
+                // 生成标签
+                const sectionTabs = document.getElementById('section-tabs');
+                const editorsContainer = document.getElementById('section-editors-container');
+                
+                sectionTabs.innerHTML = '';
+                editorsContainer.innerHTML = '';
+                
+                const sections = DataStore.sectionEdits;
+                Object.keys(sections).forEach((sectionName, index) => {
+                    // 标签
+                    const tab = document.createElement('div');
+                    tab.className = `section-tab ${index === 0 ? 'active' : ''}`;
+                    tab.textContent = sectionName;
+                    tab.onclick = () => this.switchSectionTab(sectionName);
+                    sectionTabs.appendChild(tab);
+                    
+                    // 编辑器
+                    const editor = document.createElement('div');
+                    editor.className = `section-editor ${index === 0 ? 'active' : ''}`;
+                    editor.id = `section-editor-${sectionName}`;
+                    editor.innerHTML = `
+                        <div class="section-editor-header">
+                            <h4>${sectionName}</h4>
+                        </div>
+                        <textarea id="edit-${sectionName}" style="width: 100%; min-height: 200px;">${sections[sectionName]}</textarea>
+                        <div class="section-preview" id="preview-${sectionName}"></div>
+                    `;
+                    editorsContainer.appendChild(editor);
+                    
+                    // 设置预览
+                    const textarea = document.getElementById(`edit-${sectionName}`);
+                    const preview = document.getElementById(`preview-${sectionName}`);
+                    
+                    if (textarea && preview) {
+                        textarea.addEventListener('input', () => {
+                            preview.textContent = textarea.value.substring(0, 200) + 
+                                (textarea.value.length > 200 ? '...' : '');
+                        });
+                        
+                        preview.textContent = textarea.value.substring(0, 200) + 
+                            (textarea.value.length > 200 ? '...' : '');
+                    }
+                });
+                
+                document.getElementById('section-edit-modal').style.display = 'flex';
+            },
+            
+            switchSectionTab: function(sectionName) {
+                // 移除所有活动标签
+                document.querySelectorAll('.section-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 隐藏所有编辑器
+                document.querySelectorAll('.section-editor').forEach(editor => {
+                    editor.classList.remove('active');
+                });
+                
+                // 激活当前标签
+                document.querySelectorAll('.section-tab').forEach(tab => {
+                    if (tab.textContent === sectionName) {
+                        tab.classList.add('active');
+                    }
+                });
+                
+                // 显示当前编辑器
+                const editor = document.getElementById(`section-editor-${sectionName}`);
+                if (editor) {
+                    editor.classList.add('active');
+                }
+            },
+            
+            closeSectionEditModal: function() {
+                document.getElementById('section-edit-modal').style.display = 'none';
+                DataStore.editingThoughtId = null;
+            },
+            
+            saveSectionEdits: function() {
+                const newId = document.getElementById('edit-thought-id').value.trim();
+                
+                // 收集所有编辑内容
+                Object.keys(DataStore.sectionEdits).forEach(sectionName => {
+                    const textarea = document.getElementById(`edit-${sectionName}`);
+                    if (textarea) {
+                        DataStore.sectionEdits[sectionName] = textarea.value;
+                    }
+                });
+                
+                const result = DataStore.saveSectionEdits(newId);
+                
+                if (result.success) {
+                    this.showAlert('思考记录已保存', 'success');
+                    this.closeSectionEditModal();
+                    this.loadView('thoughts');
+                } else {
+                    this.showAlert(result.message || '保存失败', 'danger');
+                }
+            },
+            
+            validateThoughtId: function() {
+                const newId = document.getElementById('edit-thought-id').value.trim();
+                const currentId = DataStore.editingThoughtId;
+                
+                if (!newId) {
+                    this.showAlert('ID不能为空', 'warning');
+                    return;
+                }
+                
+                if (newId === currentId) {
+                    this.showAlert('ID未更改', 'info');
+                    return;
+                }
+                
+                const existingThought = DataStore.getThoughtById(newId);
+                if (existingThought && existingThought.id !== currentId) {
+                    this.showAlert(`ID "${newId}" 已存在，请使用其他ID`, 'danger');
+                    return;
+                }
+                
+                this.showAlert('ID可用', 'success');
+            },
+            
+            openTimelineEditModal: function(id = null) {
+                this.currentTimelineItem = id;
+                
+                if (id) {
+                    const item = DataStore.getTimelineById(id);
+                    if (item) {
+                        document.getElementById('timeline-edit-version').value = item.version;
+                        document.getElementById('timeline-edit-date').value = item.date;
+                        document.getElementById('timeline-edit-event').value = item.event;
+                    }
+                } else {
+                    document.getElementById('timeline-edit-version').value = '';
+                    document.getElementById('timeline-edit-date').value = '';
+                    document.getElementById('timeline-edit-event').value = '';
+                }
+                
+                document.getElementById('timeline-edit-modal').style.display = 'flex';
+            },
+            
+            closeTimelineEditModal: function() {
+                document.getElementById('timeline-edit-modal').style.display = 'none';
+                this.currentTimelineItem = null;
+            },
+            
+            saveTimelineEdit: function() {
+                const version = document.getElementById('timeline-edit-version').value.trim();
+                const date = document.getElementById('timeline-edit-date').value.trim();
+                const event = document.getElementById('timeline-edit-event').value.trim();
+                
+                if (!version || !date || !event) {
+                    this.showAlert('请填写所有字段', 'warning');
+                    return;
+                }
+                
+                if (this.currentTimelineItem) {
+                    // 更新现有项目
+                    const item = DataStore.getTimelineById(this.currentTimelineItem);
+                    if (item) {
+                        item.version = version;
+                        item.date = date;
+                        item.event = event;
+                        
+                        if (DataStore.updateTimelineItem(this.currentTimelineItem, item)) {
+                            this.showAlert('时间线记录已更新', 'success');
+                            this.closeTimelineEditModal();
+                            this.loadView('timeline');
+                        } else {
+                            this.showAlert('更新失败', 'danger');
+                        }
+                    }
+                } else {
+                    // 新增项目
+                    const newItem = {
+                        version,
+                        date,
+                        event
+                    };
+                    
+                    const result = DataStore.addTimelineItem(newItem);
+                    if (result) {
+                        this.showAlert('时间线记录已添加', 'success');
+                        this.closeTimelineEditModal();
+                        this.loadView('timeline');
+                    } else {
+                        this.showAlert('添加失败', 'danger');
+                    }
+                }
+            },
+            
+            showTimelineDetail: function(id) {
+                const item = DataStore.getTimelineById(id);
+                const container = document.getElementById('timeline-detail-container');
+                
+                if (!item) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="timeline-detail-view">
+                        <div class="timeline-detail-header">
+                            <div class="timeline-detail-title">${item.version}</div>
+                            <div class="timeline-detail-date">${item.date}</div>
+                        </div>
+                        <div class="timeline-detail-content">
+                            ${item.event}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" onclick="UIManager.editTimelineItem('${id}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger" onclick="UIManager.deleteTimelineItem('${id}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            editTimelineItem: function(id) {
+                this.openTimelineEditModal(id);
+            },
+            
+            deleteTimelineItem: function(id) {
+                if (confirm('确定要删除此时间线记录吗？')) {
+                    if (DataStore.deleteTimelineItem(id)) {
+                        this.showAlert('时间线记录已删除', 'success');
+                        this.loadView('timeline');
+                    } else {
+                        this.showAlert('删除失败', 'danger');
+                    }
+                }
+            },
+            
+            addNewTimelineItem: function() {
+                this.openTimelineEditModal();
+            },
+            
+            // ==================== 数据操作方法 ====================
+            exportCurrentItem: function() {
+                if (!this.currentView) return;
+                
+                let data = null;
+                let filename = '';
+                
+                if (this.currentView === 'thoughts' || this.currentView === 'add-structured') {
+                    // 导出最新思考记录
+                    const thoughts = DataStore.getRecentThoughts(1);
+                    if (thoughts.length > 0) {
+                        data = DataStore.exportCurrentItem('thought', thoughts[0].id);
+                        filename = `思考记录_${thoughts[0].id}.json`;
+                    }
+                } else if (this.currentView === 'models' || this.currentView === 'add-model') {
+                    // 导出最新模型
+                    const models = DataStore.getRecentModels(1);
+                    if (models.length > 0) {
+                        data = DataStore.exportCurrentItem('model', models[0].id);
+                        filename = `思维模型_${models[0].id}.json`;
+                    }
+                }
+                
+                if (data) {
+                    this.downloadJSON(data, filename);
+                    this.showAlert('导出成功', 'success');
+                } else {
+                    this.showAlert('没有可导出的项目', 'warning');
+                }
+            },
+            
+            backupAllData: function() {
+                const result = DataStore.backupData();
+                if (result.success) {
+                    this.showAlert('数据备份成功', 'success');
+                    if (this.currentView === 'data-management') {
+                        this.loadView('data-management');
+                    }
+                } else {
+                    this.showAlert('备份失败: ' + result.error, 'danger');
+                }
+            },
+            
+            importData: function() {
+                const jsonData = prompt('请输入要导入的JSON数据:');
+                if (jsonData) {
+                    const result = DataStore.importData(jsonData);
+                    if (result.success) {
+                        this.showAlert('数据导入成功，页面将刷新', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        this.showAlert('导入失败: ' + result.error, 'danger');
+                    }
+                }
+            },
+            
+            exportAllData: function() {
+                const data = DataStore.exportAllData();
+                this.downloadJSON(data, `思维协同处理器_完整备份_${new Date().toISOString().split('T')[0]}.json`);
+                this.showAlert('全部数据导出成功', 'success');
+            },
+            
+            downloadJSON: function(data, filename) {
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            },
+            
+            getBackupList: function() {
+                const backups = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('structuredThoughtAssistant_backup_')) {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(key));
+                            backups.push({
+                                key: key,
+                                date: key.replace('structuredThoughtAssistant_backup_', ''),
+                                size: data.length
+                            });
+                        } catch (e) {
+                            console.error('解析备份数据失败:', key, e);
+                        }
+                    }
+                }
+                
+                // 按日期倒序排序
+                backups.sort((a, b) => b.date.localeCompare(a.date));
+                return backups;
+            },
+            
+            createBackup: function() {
+                this.backupAllData();
+            },
+            
+            restoreBackup: function(key) {
+                if (confirm('确定要恢复此备份吗？当前数据将被覆盖。')) {
+                    try {
+                        const data = localStorage.getItem(key);
+                        if (data) {
+                            const result = DataStore.importData(data);
+                            if (result.success) {
+                                this.showAlert('备份恢复成功，页面将刷新', 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                this.showAlert('恢复失败: ' + result.error, 'danger');
+                            }
+                        }
+                    } catch (e) {
+                        this.showAlert('恢复失败: ' + e.message, 'danger');
+                    }
+                }
+            },
+            
+            deleteBackup: function(key) {
+                if (confirm('确定要删除此备份吗？')) {
+                    localStorage.removeItem(key);
+                    this.showAlert('备份已删除', 'success');
+                    if (this.currentView === 'data-management') {
+                        this.loadView('data-management');
+                    }
+                }
+            },
+            
+            importFromFile: function() {
+                const fileInput = document.getElementById('import-file');
+                if (!fileInput || !fileInput.files.length) {
+                    this.showAlert('请选择文件', 'warning');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        const result = DataStore.importData(e.target.result);
+                        if (result.success) {
+                            this.showAlert('数据导入成功，页面将刷新', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            this.showAlert('导入失败: ' + result.error, 'danger');
+                        }
+                    } catch (e) {
+                        this.showAlert('导入失败: ' + e.message, 'danger');
+                    }
+                };
+                
+                reader.onerror = () => {
+                    this.showAlert('读取文件失败', 'danger');
+                };
+                
+                reader.readAsText(file);
+            },
+            
+            // ==================== 搜索功能 ====================
+            performSearch: function(query) {
+                if (!query.trim()) {
+                    return;
+                }
+                
+                // 在思考记录和模型中搜索
+                const searchResults = {
+                    thoughts: [],
+                    models: []
+                };
+                
+                const lowercaseQuery = query.toLowerCase();
+                
+                // 搜索思考记录
+                DataStore.thoughts.forEach(thought => {
+                    let match = false;
+                    
+                    // 搜索ID
+                    if (thought.id && thought.id.toLowerCase().includes(lowercaseQuery)) {
+                        match = true;
+                    }
+                    
+                    // 搜索标题
+                    if (thought.title && thought.title.toLowerCase().includes(lowercaseQuery)) {
+                        match = true;
+                    }
+                    
+                    // 搜索内容
+                    Object.values(thought.sections || {}).forEach(content => {
+                        if (content && content.toLowerCase().includes(lowercaseQuery)) {
+                            match = true;
+                        }
+                    });
+                    
+                    // 搜索标签
+                    if (thought.tags) {
+                        thought.tags.forEach(tag => {
+                            if (tag.toLowerCase().includes(lowercaseQuery)) {
+                                match = true;
+                            }
+                        });
+                    }
+                    
+                    if (match) {
+                        searchResults.thoughts.push(thought);
+                    }
+                });
+                
+                // 搜索模型
+                DataStore.models.forEach(model => {
+                    let match = false;
+                    
+                    // 搜索ID
+                    if (model.id && model.id.toLowerCase().includes(lowercaseQuery)) {
+                        match = true;
+                    }
+                    
+                    // 搜索名称
+                    if (model.name && model.name.toLowerCase().includes(lowercaseQuery)) {
+                        match = true;
+                    }
+                    
+                    // 搜索描述
+                    if (model.description && model.description.toLowerCase().includes(lowercaseQuery)) {
+                        match = true;
+                    }
+                    
+                    // 搜索标签
+                    if (model.tags) {
+                        model.tags.forEach(tag => {
+                            if (tag.toLowerCase().includes(lowercaseQuery)) {
+                                match = true;
+                            }
+                        });
+                    }
+                    
+                    if (match) {
+                        searchResults.models.push(model);
+                    }
+                });
+                
+                // 显示搜索结果
+                this.displaySearchResults(searchResults, query);
+            },
+            
+            displaySearchResults: function(results, query) {
+                if (this.currentView !== 'overview') {
+                    return; // 只在总览页面显示搜索结果
+                }
+                
+                const contentArea = document.getElementById('content-area');
+                const originalContent = contentArea.innerHTML;
+                
+                if (results.thoughts.length === 0 && results.models.length === 0) {
+                    // 没有结果，恢复原内容
+                    return;
+                }
+                
+                // 创建搜索结果视图
+                let resultsHTML = `
+                    <div class="detail-view" style="margin-top: 20px;">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">搜索结果: "${query}"</div>
+                            </div>
+                            <div class="detail-id">${results.thoughts.length + results.models.length} 个结果</div>
+                        </div>
+                        <div class="detail-content">
+                `;
+                
+                if (results.thoughts.length > 0) {
+                    resultsHTML += `
+                        <h5 style="color: var(--primary-color); margin: 15px 0 10px 0;">思考记录 (${results.thoughts.length})</h5>
+                        <div style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+                    `;
+                    
+                    results.thoughts.forEach(thought => {
+                        resultsHTML += `
+                            <div class="index-item" onclick="showThoughtDetail('${thought.id}')">
+                                <div class="index-item-id">${thought.id}</div>
+                                <div class="index-item-title">${thought.title || '无标题'}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsHTML += `</div>`;
+                }
+                
+                if (results.models.length > 0) {
+                    resultsHTML += `
+                        <h5 style="color: var(--primary-color); margin: 15px 0 10px 0;">思维模型 (${results.models.length})</h5>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                    `;
+                    
+                    results.models.forEach(model => {
+                        resultsHTML += `
+                            <div class="index-item" onclick="showModelDetail('${model.id}')">
+                                <div class="index-item-id">${model.id}</div>
+                                <div class="index-item-title">${model.name}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsHTML += `</div>`;
+                }
+                
+                resultsHTML += `
+                        </div>
+                    </div>
+                `;
+                
+                // 将搜索结果插入到内容区域
+                contentArea.innerHTML = resultsHTML + originalContent;
+            },
+            
+            searchByTag: function(tag) {
+                // 设置搜索框内容
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = tag;
+                }
+                
+                // 执行搜索
+                this.performSearch(tag);
+                
+                // 切换到总览视图以显示结果
+                this.loadView('overview');
+            },
+            
+            // ==================== 网络分析工具 ====================
+            findMissingConnections: function() {
+                const models = DataStore.models;
+                const connections = DataStore.modelConnections;
+                
+                // 找出没有关联的模型
+                const unconnectedModels = models.filter(model => 
+                    !connections[model.id] || connections[model.id].length === 0
+                );
+                
+                // 找出关联较少的模型
+                const weaklyConnectedModels = Object.entries(connections)
+                    .filter(([id, conns]) => conns.length <= 2)
+                    .map(([id]) => DataStore.getModelById(id))
+                    .filter(model => model);
+                
+                let html = '<div style="margin-top: 15px;">';
+                
+                if (unconnectedModels.length > 0) {
+                    html += `
+                        <h5 style="color: var(--warning-color); margin-bottom: 10px;">未关联模型 (${unconnectedModels.length})</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                            ${unconnectedModels.map(model => `
+                                <span class="tag" onclick="showModelDetail('${model.id}')" style="cursor: pointer;">
+                                    ${model.id}
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                if (weaklyConnectedModels.length > 0) {
+                    html += `
+                        <h5 style="color: var(--warning-color); margin-bottom: 10px;">弱关联模型 (${weaklyConnectedModels.length})</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                            ${weaklyConnectedModels.map(model => `
+                                <span class="tag" onclick="showModelDetail('${model.id}')" style="cursor: pointer;">
+                                    ${model.id} (${connections[model.id] ? connections[model.id].length : 0} 连接)
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                if (unconnectedModels.length === 0 && weaklyConnectedModels.length === 0) {
+                    html += '<p style="color: var(--success-color);">所有模型都已建立良好的关联网络！</p>';
+                }
+                
+                html += '</div>';
+                
+                document.getElementById('network-analysis-results').innerHTML = html;
+            },
+            
+            exportNetworkData: function() {
+                const networkData = {
+                    nodes: [],
+                    edges: [],
+                    exportDate: new Date().toISOString()
+                };
+                
+                // 添加节点
+                DataStore.models.forEach(model => {
+                    networkData.nodes.push({
+                        id: model.id,
+                        name: model.name,
+                        group: model.tags ? model.tags[0] || 'default' : 'default'
+                    });
+                });
+                
+                // 添加边
+                Object.entries(DataStore.modelConnections).forEach(([source, targets]) => {
+                    targets.forEach(target => {
+                        networkData.edges.push({
+                            source: source,
+                            target: target
+                        });
+                    });
+                });
+                
+                this.downloadJSON(JSON.stringify(networkData, null, 2), `模型关联网络_${new Date().toISOString().split('T')[0]}.json`);
+                this.showAlert('网络数据导出成功', 'success');
+            },
+            
+            checkTagConsistency: function() {
+                const tags = DataStore.tags;
+                const tagList = Object.keys(tags);
+                
+                // 查找相似的标签
+                const similarTags = [];
+                for (let i = 0; i < tagList.length; i++) {
+                    for (let j = i + 1; j < tagList.length; j++) {
+                        const tag1 = tagList[i];
+                        const tag2 = tagList[j];
+                        
+                        // 简单的相似度检查（基于字符串包含关系）
+                        if (tag1.includes(tag2.replace(/[🌌🧠💞⏳🎵⚖️]/g, '').trim()) || 
+                            tag2.includes(tag1.replace(/[🌌🧠💞⏳🎵⚖️]/g, '').trim())) {
+                            similarTags.push([tag1, tag2]);
+                        }
+                    }
+                }
+                
+                let html = '<div style="margin-top: 15px;">';
+                
+                if (similarTags.length > 0) {
+                    html += `
+                        <h5 style="color: var(--warning-color); margin-bottom: 10px;">可能的标签重复 (${similarTags.length})</h5>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                    `;
+                    
+                    similarTags.forEach(([tag1, tag2]) => {
+                        html += `
+                            <div style="padding: 8px; border-bottom: 1px solid #eee;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>${tag1} (${tags[tag1]} 次)</span>
+                                    <span>${tag2} (${tags[tag2]} 次)</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                } else {
+                    html += '<p style="color: var(--success-color);">标签使用一致，未发现明显重复。</p>';
+                }
+                
+                html += '</div>';
+                
+                document.getElementById('consistency-results').innerHTML = html;
+            },
+            
+            getTagSuggestions: function() {
+                const input = document.getElementById('tag-suggestion-input');
+                if (!input || !input.value.trim()) {
+                    this.showAlert('请输入内容描述', 'warning');
+                    return;
+                }
+                
+                const text = input.value.trim();
+                
+                // 简单的关键词提取（实际应用中可以使用更复杂的NLP技术）
+                const keywords = text.split(/[，。！？；,.!?;]/).filter(word => word.trim().length > 2);
+                
+                // 根据关键词推荐标签
+                const suggestions = [];
+                const allTags = Object.keys(DataStore.tags);
+                
+                keywords.forEach(keyword => {
+                    allTags.forEach(tag => {
+                        if (tag.includes(keyword) || keyword.includes(tag.replace(/[🌌🧠💞⏳🎵⚖️]/g, '').trim())) {
+                            if (!suggestions.includes(tag)) {
+                                suggestions.push(tag);
+                            }
+                        }
+                    });
+                });
+                
+                // 如果没有匹配的标签，使用常用标签
+                if (suggestions.length === 0) {
+                    const topTags = DataStore.getTopTags(5);
+                    suggestions.push(...topTags.map(t => t.tag));
+                }
+                
+                // 显示建议
+                const container = document.getElementById('tag-suggestions-container');
+                container.innerHTML = `
+                    <div style="margin-top: 10px;">
+                        <h6 style="color: var(--primary-color); margin-bottom: 10px;">推荐标签</h6>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${suggestions.map(tag => `
+                                <span class="tag" style="cursor: pointer;" onclick="document.getElementById('tag-search-input').value = '${tag}'; UIManager.searchByTag('${tag}')">
+                                    ${tag}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+            
+            renderThoughtDetail: function(thought, isEditing = false) {
+                if (isEditing) {
+                    return this.renderThoughtEdit(thought);
+                }
+                
+                let sectionsHTML = '';
+                Object.keys(thought.sections || {}).forEach(sectionName => {
+                    const content = thought.sections[sectionName];
+                    sectionsHTML += `
+                        <div class="detail-section">
+                            <h4>${sectionName}</h4>
+                            <div class="detail-section-content">
+                                <pre style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">${content}</pre>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return `
+                    <div class="content-header">
+                        <h2>思考记录详情</h2>
+                        <p>系统版本: ${thought.systemVersion || DataStore.currentVersion}</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">${thought.title || '无标题'}</div>
+                                <div class="detail-id">${thought.id}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-content">
+                            <div style="margin-bottom: 20px;">
+                                <p><strong>思考类型:</strong> ${thought.type || '未指定'}</p>
+                                <p><strong>日期:</strong> ${thought.date}</p>
+                                <p><strong>标签:</strong> 
+                                    ${thought.tags ? thought.tags.map(tag => `<span class="tag">${tag}</span>`).join(' ') : '无'}
+                                </p>
+                                ${thought.related && thought.related.length > 0 ? `
+                                    <p><strong>关联:</strong> 
+                                        ${thought.related.map(id => {
+                                            if (id.startsWith('#')) {
+                                                return `<span class="tag" onclick="showThoughtDetail('${id}')" style="cursor: pointer;">${id}</span>`;
+                                            } else if (id.startsWith('M-')) {
+                                                return `<span class="tag" onclick="showModelDetail('${id}')" style="cursor: pointer;">${id}</span>`;
+                                            }
+                                            return `<span class="tag">${id}</span>`;
+                                        }).join(' ')}
+                                    </p>
+                                ` : ''}
+                            </div>
+                            
+                            ${sectionsHTML}
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" onclick="editThought('${thought.id}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-secondary" onclick="UIManager.openSectionEditModal('${thought.id}')">
+                                <i class="fas fa-pencil-alt"></i> 分段编辑
+                            </button>
+                            <button class="btn btn-primary" onclick="UIManager.openTagReviewModal('thought', '${thought.id}')">
+                                <i class="fas fa-tags"></i> 管理标签
+                            </button>
+                            <button class="btn btn-danger" onclick="openDeleteModal('thought', '${thought.id}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            renderThoughtEdit: function(thought) {
+                // 简化的编辑界面
+                let content = '';
+                Object.keys(thought.sections || {}).forEach(sectionName => {
+                    content += `${sectionName}:\n${thought.sections[sectionName]}\n\n`;
+                });
+                
+                return `
+                    <div class="content-header">
+                        <h2>编辑思考记录</h2>
+                        <p>修改思考内容</p>
+                    </div>
+                    
+                    <div class="input-section">
+                        <h3>编辑思考内容</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">思考ID</label>
+                            <input type="text" id="edit-thought-id-value" value="${thought.id}" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">思考标题</label>
+                            <input type="text" id="edit-thought-title" value="${thought.title || ''}" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <textarea id="edit-thought-content" style="width: 100%; padding: 15px; min-height: 400px;">${content}</textarea>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="UIManager.saveEditedThought('${thought.id}')">
+                                <i class="fas fa-save"></i> 保存更改
+                            </button>
+                            <button class="btn btn-secondary" onclick="showThoughtDetail('${thought.id}')">
+                                <i class="fas fa-times"></i> 取消
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            saveEditedThought: function(oldId) {
+                const newId = document.getElementById('edit-thought-id-value').value.trim();
+                const title = document.getElementById('edit-thought-title').value.trim();
+                const content = document.getElementById('edit-thought-content').value.trim();
+                
+                if (!newId) {
+                    this.showAlert('思考ID不能为空', 'warning');
+                    return;
+                }
+                
+                if (!content) {
+                    this.showAlert('思考内容不能为空', 'warning');
+                    return;
+                }
+                
+                // 解析内容
+                const thought = DataStore.parseStructuredContent(content);
+                thought.id = newId;
+                thought.title = title || thought.title;
+                
+                // 检查ID是否已存在（且不是当前思考）
+                if (newId !== oldId) {
+                    const existingThought = DataStore.getThoughtById(newId);
+                    if (existingThought) {
+                        this.showAlert(`ID "${newId}" 已存在，请使用其他ID`, 'danger');
+                        return;
+                    }
+                }
+                
+                // 更新思考记录
+                const success = DataStore.updateThought(oldId, thought);
+                
+                if (success) {
+                    this.showAlert('思考记录已保存', 'success');
+                    showThoughtDetail(newId);
+                } else {
+                    this.showAlert('保存失败', 'danger');
+                }
+            },
+            
+            renderModelDetail: function(model, isEditing = false) {
+                if (isEditing) {
+                    return this.renderModelEdit(model);
+                }
+                
+                return `
+                    <div class="content-header">
+                        <h2>思维模型详情</h2>
+                        <p>核心分析框架</p>
+                    </div>
+                    
+                    <div class="detail-view">
+                        <div class="detail-header">
+                            <div>
+                                <div class="detail-title">${model.name}</div>
+                                <div class="detail-id">${model.id}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-content">
+                            <div class="detail-section">
+                                <h4>模型描述</h4>
+                                <div class="detail-section-content">
+                                    <pre style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">${model.description}</pre>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>模型信息</h4>
+                                <div class="detail-section-content">
+                                    <p><strong>创建日期:</strong> ${model.date}</p>
+                                    ${model.fromThought ? `<p><strong>来源思考:</strong> <span class="tag" onclick="showThoughtDetail('${model.fromThought}')" style="cursor: pointer;">${model.fromThought}</span></p>` : ''}
+                                    ${model.usageCount ? `<p><strong>使用次数:</strong> ${model.usageCount}</p>` : ''}
+                                    ${model.lastUsed ? `<p><strong>最后使用:</strong> ${model.lastUsed}</p>` : ''}
+                                    <p><strong>标签:</strong> 
+                                        ${model.tags ? model.tags.map(tag => `<span class="tag">${tag}</span>`).join(' ') : '无'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            ${model.relatedModels && model.relatedModels.length > 0 ? `
+                                <div class="detail-section">
+                                    <h4>关联模型</h4>
+                                    <div class="detail-section-content">
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            ${model.relatedModels.map(id => `
+                                                <span class="tag" onclick="showModelDetail('${id}')" style="cursor: pointer;">
+                                                    ${id}
+                                                </span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" onclick="editModel('${model.id}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-primary" onclick="UIManager.openTagReviewModal('model', '${model.id}')">
+                                <i class="fas fa-tags"></i> 管理标签
+                            </button>
+                            <button class="btn btn-danger" onclick="openDeleteModal('model', '${model.id}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            renderModelEdit: function(model) {
+                return `
+                    <div class="content-header">
+                        <h2>编辑思维模型</h2>
+                        <p>修改模型信息</p>
+                    </div>
+                    
+                    <div class="input-section">
+                        <h3>编辑模型信息</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型ID</label>
+                            <input type="text" id="edit-model-id-value" value="${model.id}" style="width: 100%; padding: 10px;" readonly>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型名称</label>
+                            <input type="text" id="edit-model-name" value="${model.name}" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">来源思考ID</label>
+                            <input type="text" id="edit-model-from-thought" value="${model.fromThought || ''}" style="width: 100%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; color: var(--primary-color);">模型描述</label>
+                            <textarea id="edit-model-description" style="width: 100%; padding: 10px; min-height: 300px;">${model.description}</textarea>
+                        </div>
+                        
+                        <div class="related-models-section">
+                            <div class="related-models-header">
+                                <h5 style="color: var(--primary-color); margin: 0;">关联模型</h5>
+                            </div>
+                            <div class="related-models-list" id="related-models-list">
+                                ${model.relatedModels ? model.relatedModels.map(relatedId => `
+                                    <div class="related-model-tag">
+                                        ${relatedId}
+                                        <span class="remove" onclick="UIManager.removeRelatedModel('${relatedId}')">×</span>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                            <div class="related-models-input">
+                                <input type="text" id="related-model-input" placeholder="输入模型ID (如 M-80)" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <button class="btn btn-secondary" onclick="UIManager.addRelatedModel()" style="padding: 8px 15px;">
+                                    <i class="fas fa-plus"></i> 添加
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="UIManager.saveEditedModel('${model.id}')">
+                                <i class="fas fa-save"></i> 保存更改
+                            </button>
+                            <button class="btn btn-secondary" onclick="showModelDetail('${model.id}')">
+                                <i class="fas fa-times"></i> 取消
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            saveEditedModel: function(id) {
+                const name = document.getElementById('edit-model-name').value.trim();
+                const fromThought = document.getElementById('edit-model-from-thought').value.trim();
+                const description = document.getElementById('edit-model-description').value.trim();
+                
+                if (!name) {
+                    this.showAlert('模型名称不能为空', 'warning');
+                    return;
+                }
+                
+                if (!description) {
+                    this.showAlert('模型描述不能为空', 'warning');
+                    return;
+                }
+                
+                const model = DataStore.getModelById(id);
+                if (!model) {
+                    this.showAlert('找不到模型', 'danger');
+                    return;
+                }
+                
+                // 更新模型
+                model.name = name;
+                model.fromThought = fromThought || null;
+                model.description = description;
+                
+                const success = DataStore.updateModel(id, model);
+                
+                if (success) {
+                    this.showAlert('思维模型已保存', 'success');
+                    showModelDetail(id);
+                } else {
+                    this.showAlert('保存失败', 'danger');
+                }
+            },
+            
+            addRelatedModel: function() {
+                const input = document.getElementById('related-model-input');
+                if (!input || !input.value.trim()) return;
+                
+                const modelId = input.value.trim();
+                
+                // 检查模型是否存在
+                const model = DataStore.getModelById(modelId);
+                if (!model) {
+                    this.showAlert(`模型 ${modelId} 不存在`, 'warning');
+                    return;
+                }
+                
+                // 添加到列表
+                const container = document.getElementById('related-models-list');
+                const tag = document.createElement('div');
+                tag.className = 'related-model-tag';
+                tag.innerHTML = `
+                    ${modelId}
+                    <span class="remove" onclick="UIManager.removeRelatedModel('${modelId}')">×</span>
+                `;
+                container.appendChild(tag);
+                
+                input.value = '';
+            },
+            
+            removeRelatedModel: function(modelId) {
+                const tags = document.querySelectorAll('.related-model-tag');
+                tags.forEach(tag => {
+                    if (tag.textContent.includes(modelId)) {
+                        tag.remove();
+                    }
+                });
+            }
         };
         
         // ==================== 全局函数 ====================
